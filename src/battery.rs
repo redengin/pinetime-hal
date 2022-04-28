@@ -42,15 +42,11 @@ impl BatteryStatus {
         myself
     }
 
-    /// Return whether the watch is currently charging.
-    ///
     /// This returns the stored value. To fetch current data, call `update()` first.
     pub fn is_charging(&self) -> bool {
         self.charging
     }
 
-    /// Return the current battery voltage in 0.1 volts.
-    ///
     /// This returns the stored value. To fetch current data, call `update()` first.
     pub fn millivolts(&self) -> i16 {
         self.millivolts
@@ -77,7 +73,6 @@ impl BatteryStatus {
 
         changed
     }
-
 
     // /// Convert a raw ADC measurement into a battery voltage in 0.1 volts.
     fn read_millivolts(&mut self) -> Option<i16> {
