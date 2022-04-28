@@ -4,7 +4,8 @@ Rust Pinetime Hardware Abstraction Layer (HAL)
 Hardware
 --------------------------------------------------------------------------------
 * nRF52832 SOC (`thumbv7em-none-eabihf`)
-
+* embedded-hal traits
+    * [Delay](src/delay.rs)
 
 Demo
 ================================================================================
