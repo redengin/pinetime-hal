@@ -1,7 +1,10 @@
 //! use TIMER0 as RTIC takes ownership of SYST
 
 use embedded_hal::blocking::delay::{DelayMs, DelayUs};
-use nrf52832_hal::{pac, timer::Timer};
+use nrf52832_hal::{
+    pac,
+    timer::Timer,
+};
 
 pub struct Delay {
     timer: nrf52832_hal::Timer<pac::TIMER0>,
@@ -13,11 +16,15 @@ impl Delay {
             timer: Timer::new(timer0),
         }
     }
+
+    pub fn free(self) -> pac::TIMER0 {
+        self.timer.free()
+    }
 }
 
 impl DelayUs<u32> for Delay {
     fn delay_us(&mut self, us: u32) {
-        // 1 cycle = 1 µs (per the nrf52832_hal configuration of TIMER0)
+        // Currently the timer is hardcoded at 1 MHz, so 1 cycle = 1 µs.
         let cycles = us;
         self.timer.delay(cycles);
     }
