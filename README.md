@@ -6,6 +6,8 @@ Hardware
 * nRF52832 SOC (`thumbv7em-none-eabihf`)
 * embedded-hal traits
     * [Delay](src/delay.rs)
+* [Battery](src/battery.rs)
+
 
 Demo
 ================================================================================
