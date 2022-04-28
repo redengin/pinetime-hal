@@ -1,4 +1,4 @@
-Pinetime Board Support Packet (in a crate)
+Rust Pinetime Hardware Abstraction Layer (HAL)
 ================================================================================
 
 Hardware
