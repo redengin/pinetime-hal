@@ -1,7 +1,7 @@
 use nrf52832_hal::{self as hal, pac};
 use nrf52832_hal::saadc::{Saadc, SaadcConfig};
 use nrf52832_hal::target::SAADC;
-use nrf52832_hal::gpio::Level;
+use nrf52832_hal::gpio::{Pin, Input, Floating, Level};
 // embedded-hal traits
 mod delay;
 use delay::Delay;
@@ -17,6 +17,7 @@ pub struct Pinetime {
     pub delay: Delay,
     pub battery: BatteryStatus,
     pub backlight: Backlight,
+    pub crown: Pin<Input<Floating>>,
 }
 
 impl Pinetime {
@@ -29,6 +30,8 @@ impl Pinetime {
         let gpio = hal::gpio::p0::Parts::new(hw_gpio);
         // Set up ADC
         let saadc = Saadc::new(hw_saddc, SaadcConfig::default());
+        // enable crown
+        gpio.p0_15.into_push_pull_output(Level::High);
 
         Self {
             delay: delay::Delay::init(hw_timer0),
@@ -42,6 +45,7 @@ impl Pinetime {
                 gpio.p0_22.into_push_pull_output(Level::Low).degrade(),
                 gpio.p0_23.into_push_pull_output(Level::Low).degrade(),
             ),
+            crown: gpio.p0_13.into_floating_input().degrade(),
         }
     }
 }
