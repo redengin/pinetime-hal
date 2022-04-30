@@ -1,24 +1,19 @@
-//! use TIMER0 as RTIC takes ownership of SYST
-
 use embedded_hal::blocking::delay::{DelayMs, DelayUs};
 use nrf52832_hal::{
     pac,
     timer::Timer,
 };
 
+/// use TIMER0 as RTIC takes ownership of SYST
 pub struct Delay {
     timer: nrf52832_hal::Timer<pac::TIMER0>,
 }
 
 impl Delay {
-    pub fn new(timer0: pac::TIMER0) -> Self {
+    pub fn init(timer0: pac::TIMER0) -> Self {
         Self {
             timer: Timer::new(timer0),
         }
-    }
-
-    pub fn free(self) -> pac::TIMER0 {
-        self.timer.free()
     }
 }
 

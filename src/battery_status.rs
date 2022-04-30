@@ -1,14 +1,13 @@
 use embedded_hal::adc::OneShot;
 use embedded_hal::digital::v2::InputPin;
-use nrf52832_hal::gpio::{p0, Floating, Input};
-use nrf52832_hal::saadc::{Saadc, SaadcConfig};
-use nrf52832_hal::target::SAADC;
+use nrf52832_hal::gpio::{p0, Pin, Input, Floating};
+use nrf52832_hal::saadc::{Saadc};
 
 pub struct BatteryStatus {
-    /// Pin P0.12: High = battery, Low = charging.
-    pin_charge_indication: p0::P0_12<Input<Floating>>,
+    /// Pin High = battery, Low = charging.
+    pin_charge_indication: Pin<Input<Floating>>,
 
-    /// Pin P0.31: Voltage level
+    /// Pin Voltage level
     pin_voltage: p0::P0_31<Input<Floating>>,
 
     /// SAADC peripheral
@@ -22,13 +21,11 @@ pub struct BatteryStatus {
 
 impl BatteryStatus {
     /// Initialize the battery status.
-    pub fn init(
-        pin_charge_indication: p0::P0_12<Input<Floating>>,
+    pub(super) fn init(
+        saadc: Saadc,
+        pin_charge_indication: Pin<Input<Floating>>,
         pin_voltage: p0::P0_31<Input<Floating>>,
-        hw_saadc: SAADC,
     ) -> Self {
-        let saadc = Saadc::new(hw_saadc, SaadcConfig::default());
-
         let mut myself = Self {
             pin_charge_indication,
             pin_voltage,
@@ -74,14 +71,14 @@ impl BatteryStatus {
         changed
     }
 
-    // /// Convert a raw ADC measurement into a battery voltage in 0.1 volts.
+    /// Convert a raw ADC measurement into a battery voltage in 0.1 volts.
     fn read_millivolts(&mut self) -> Option<i16> {
         let adc_val = self.saadc.read(&mut self.pin_voltage).unwrap();
         if adc_val < 0 {
             // What?
             return None;
         }
-        Some((adc_val * 2000) / 4965) // we multiply the ADC value by 2 * 1000 for mV and divide by (2 ^ 14 / 3.3V reference)
+        // we multiply the ADC value by 2 * 1000 for mV and divide by (2 ^ 14 / 3.3V reference)
+        Some((adc_val * 2000) / (f64::from(2^14) / 3.3) as i16)
     }
-
 }
