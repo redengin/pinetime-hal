@@ -10,27 +10,20 @@ pub struct Backlight {
     low: Pin<Output<PushPull>>,
     mid: Pin<Output<PushPull>>,
     high: Pin<Output<PushPull>>,
-
-    /// The current brightness level (value between 0 and 7).
-    brightness: u8,
 }
 
 impl Backlight {
     /// Initialize the backlight with the specified level (0–7).
-    pub fn init(
+    pub(crate) fn init(
         low: Pin<Output<PushPull>>,
         mid: Pin<Output<PushPull>>,
         high: Pin<Output<PushPull>>,
-        brightness: u8,
     ) -> Self {
-        let mut backlight = Self {
+        Self {
             low,
             mid,
             high,
-            brightness,
-        };
-        backlight.set(brightness);
-        backlight
+        }
     }
 
     /// Set the brightness level. Must be a value between 0 (off) and 7 (max
@@ -55,26 +48,5 @@ impl Backlight {
         } else {
             self.high.set_high().unwrap();
         }
-        self.brightness = brightness;
-    }
-
-    /// Turn off the backlight.
-    pub fn off(&mut self) {
-        self.set(0);
-    }
-
-    /// Increase backlight brightness.
-    pub fn brighter(&mut self) {
-        self.set(self.brightness + 1);
-    }
-
-    /// Decrease backlight brightness.
-    pub fn darker(&mut self) {
-        self.set(self.brightness - 1);
-    }
-
-    /// Return the current brightness level (value between 0 and 7).
-    pub fn get_brightness(&self) -> u8 {
-        self.brightness
     }
 }
