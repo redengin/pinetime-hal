@@ -11,8 +11,7 @@ Hardware
 * [Screen](https://crates.io/crates/st7789)
     * [embedded-graphics](https://crates.io/crates/embedded-graphics)
 * [Touch Screen](https://crates.io/crates/cst816s)
-    * FIXME: doesn't support interrupts at this time
-
+* [Accelerometer](src/accelerometer.rs)
 
 Demo
 ================================================================================

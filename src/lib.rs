@@ -7,8 +7,8 @@ use nrf52832_hal::gpio::{p0, Pin, Input, Output, Floating, Level};
 use nrf52832_hal::target::{SPIM1, TWIM1};
 use nrf52832_hal::twim::{Twim};
 use display_interface_spi::SPIInterface;
-use st7789::{self, ST7789, Orientation};
-use cst816s::CST816S;
+use st7789::{self, ST7789, Orientation};    // LCD driver
+use cst816s::CST816S;                       // touchpad driver
 // embedded-hal traits
 mod delay;
 use delay::Delay;
@@ -80,7 +80,7 @@ impl Pinetime {
         let mut screen_delay = Delay::init(hw_timer0);
         screen.init(&mut screen_delay).unwrap();
         screen.set_orientation(Orientation::Landscape).unwrap();
-        // Set up Touch
+        // Set up Touchpad
         let i2c_pins = hal::twim::Pins {
             scl: gpio.p0_07.into_floating_input().degrade(),
             sda: gpio.p0_06.into_floating_input().degrade(),
@@ -89,6 +89,7 @@ impl Pinetime {
         let touch_interrupt_pin = gpio.p0_28.into_pullup_input();
         let touch_rst = gpio.p0_10.into_push_pull_output(Level::High);
         let touchpad = CST816S::new(i2c_port, touch_interrupt_pin, touch_rst);
+        // Set up accelerometer
 
         Self {
             battery,
