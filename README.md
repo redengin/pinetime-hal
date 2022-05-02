@@ -8,6 +8,7 @@ Hardware
     * [Delay](src/delay.rs)
 * [Battery](src/battery.rs)
 * [Backlight](src/backlight.rs)
+* [Screen](src/screen.rs)
 
 
 Demo

@@ -1,13 +1,15 @@
 use hal::Spim;
+use hal::gpio::PushPull;
 use nrf52832_hal::{self as hal, pac};
 use nrf52832_hal::saadc::{Saadc, SaadcConfig};
 use nrf52832_hal::target::SAADC;
-use nrf52832_hal::gpio::{Pin, Input, Floating, Level};
+use nrf52832_hal::gpio::{p0, Pin, Input, Output, Floating, Level};
 use nrf52832_hal::target::SPIM1;
+use display_interface_spi::SPIInterface;
+use st7789::{self, ST7789, Orientation};
 // embedded-hal traits
 mod delay;
 use delay::Delay;
-
 
 pub mod battery_status;
 use battery_status::BatteryStatus;
@@ -16,11 +18,17 @@ use backlight::Backlight;
 
 
 pub struct Pinetime {
-    pub delay: Delay,
     pub battery: BatteryStatus,
     pub backlight: Backlight,
     pub crown: Pin<Input<Floating>>,
-    spi1: Spim<SPIM1>,
+    pub screen: st7789::ST7789<
+        SPIInterface<
+            Spim<SPIM1>,
+            p0::P0_18<Output<PushPull>>,    // data/command pin
+            p0::P0_25<Output<PushPull>>,    // chip select
+        >,
+        p0::P0_26<Output<PushPull>>,        // reset pin
+    >,
 }
 
 impl Pinetime {
@@ -37,13 +45,10 @@ impl Pinetime {
         // enable crown
         gpio.p0_15.into_push_pull_output(Level::High);
         // Set up SPI
-        let spi_clk = gpio.p0_02.into_push_pull_output(Level::Low).degrade();
-        let spi_mosi = gpio.p0_03.into_push_pull_output(Level::Low).degrade();
-        let spi_miso = gpio.p0_04.into_floating_input().degrade();
         let spi_pins = hal::spim::Pins {
-            sck: spi_clk,
-            miso: Some(spi_miso),
-            mosi: Some(spi_mosi),
+            sck: gpio.p0_02.into_push_pull_output(Level::Low).degrade(),
+            mosi: Some(gpio.p0_03.into_push_pull_output(Level::Low).degrade()),
+            miso: Some(gpio.p0_04.into_floating_input().degrade()),
         };
         let spi1 = hal::Spim::new(
             hw_spi,
@@ -51,10 +56,19 @@ impl Pinetime {
             // 8MHz to maximize screen refresh
             hal::spim::Frequency::M8,
             hal::spim::MODE_3,
-            0,
+            0,  // fill transmissions with tailing zeros (TODO: should this be 122?)
         );
+        // Set up Screen
+        let screen_cs = gpio.p0_25.into_push_pull_output(Level::High);
+        let dc = gpio.p0_18.into_push_pull_output(Level::Low); // data/clock switch
+        let di = SPIInterface::new(spi1, dc, screen_cs);
+        let rst = gpio.p0_26.into_push_pull_output(Level::Low); // reset pin
+        let mut screen = ST7789::new(di, rst, 240, 240);
+        let mut screen_delay = Delay::init(hw_timer0);
+        screen.init(&mut screen_delay).unwrap();
+        screen.set_orientation(Orientation::Landscape).unwrap();
+
         Self {
-            delay: delay::Delay::init(hw_timer0),
             battery: BatteryStatus::init(
                 saadc,
                 gpio.p0_12.into_floating_input().degrade(),
@@ -66,7 +80,9 @@ impl Pinetime {
                 gpio.p0_23.into_push_pull_output(Level::Low).degrade(),
             ),
             crown: gpio.p0_13.into_floating_input().degrade(),
-            spi1: spi1,
+            screen,
         }
     }
 }
+
+
