@@ -8,7 +8,10 @@ Hardware
     * [Delay](src/delay.rs)
 * [Battery](src/battery.rs)
 * [Backlight](src/backlight.rs)
-* [Screen](src/screen.rs)
+* [Screen](https://crates.io/crates/st7789)
+    * [embedded-graphics](https://crates.io/crates/embedded-graphics)
+* [Touch Screen](https://crates.io/crates/cst816s)
+    * FIXME: doesn't support interrupts at this time
 
 
 Demo

@@ -15,6 +15,7 @@ embedded-hal = "0.2.7"
 nrf52832-hal = { version = "0.10", features = ["rt"], default-features = false }
 display-interface-spi = "0.4.1"
 st7789 = { version = "0.6.1", features = ["graphics", "batch", "buffer"] }
+cst816s = "0.1.4"
 
 [profile.release]
 codegen-units = 1 # better optimizations

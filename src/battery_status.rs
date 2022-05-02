@@ -78,7 +78,6 @@ impl BatteryStatus {
             // What?
             return None;
         }
-        // we multiply the ADC value by 2 * 1000 for mV and divide by (2 ^ 14 / 3.3V reference)
-        Some((adc_val * 2000) / (f64::from(2^14) / 3.3) as i16)
+        Some((adc_val * 2000) / (4095.0 / 3.3) as i16)
     }
 }

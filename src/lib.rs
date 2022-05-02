@@ -1,12 +1,14 @@
 use hal::Spim;
-use hal::gpio::PushPull;
+use hal::gpio::{PushPull, PullUp};
 use nrf52832_hal::{self as hal, pac};
 use nrf52832_hal::saadc::{Saadc, SaadcConfig};
 use nrf52832_hal::target::SAADC;
 use nrf52832_hal::gpio::{p0, Pin, Input, Output, Floating, Level};
-use nrf52832_hal::target::SPIM1;
+use nrf52832_hal::target::{SPIM1, TWIM1};
+use nrf52832_hal::twim::{Twim};
 use display_interface_spi::SPIInterface;
 use st7789::{self, ST7789, Orientation};
+use cst816s::CST816S;
 // embedded-hal traits
 mod delay;
 use delay::Delay;
@@ -29,6 +31,10 @@ pub struct Pinetime {
         >,
         p0::P0_26<Output<PushPull>>,        // reset pin
     >,
+    pub touchpad: CST816S<Twim<TWIM1>,
+        p0::P0_28<Input<PullUp>>,           // interrupt pin
+        p0::P0_10<Output<PushPull>>,        // reset pin
+    >,
 }
 
 impl Pinetime {
@@ -37,13 +43,20 @@ impl Pinetime {
                 hw_gpio: pac::P0,
                 hw_saddc: SAADC,
                 hw_spi: pac::SPIM1,
+                hw_twim1: pac::TWIM1,
     ) -> Self {
         // Set up GPIO
         let gpio = hal::gpio::p0::Parts::new(hw_gpio);
-        // Set up ADC
+        // Set up battery status
         let saadc = Saadc::new(hw_saddc, SaadcConfig::default());
+        let battery = BatteryStatus::init(
+                saadc,
+                gpio.p0_12.into_floating_input().degrade(),
+                gpio.p0_31.into_floating_input(),
+        );
         // enable crown
         gpio.p0_15.into_push_pull_output(Level::High);
+        let crown = gpio.p0_13.into_floating_input().degrade();
         // Set up SPI
         let spi_pins = hal::spim::Pins {
             sck: gpio.p0_02.into_push_pull_output(Level::Low).degrade(),
@@ -67,20 +80,26 @@ impl Pinetime {
         let mut screen_delay = Delay::init(hw_timer0);
         screen.init(&mut screen_delay).unwrap();
         screen.set_orientation(Orientation::Landscape).unwrap();
+        // Set up Touch
+        let i2c_pins = hal::twim::Pins {
+            scl: gpio.p0_07.into_floating_input().degrade(),
+            sda: gpio.p0_06.into_floating_input().degrade(),
+        };
+        let i2c_port = hal::twim::Twim::new(hw_twim1, i2c_pins, hal::twim::Frequency::K400);
+        let touch_interrupt_pin = gpio.p0_28.into_pullup_input();
+        let touch_rst = gpio.p0_10.into_push_pull_output(Level::High);
+        let touchpad = CST816S::new(i2c_port, touch_interrupt_pin, touch_rst);
 
         Self {
-            battery: BatteryStatus::init(
-                saadc,
-                gpio.p0_12.into_floating_input().degrade(),
-                gpio.p0_31.into_floating_input(),
-            ),
+            battery,
             backlight: Backlight::init(
                 gpio.p0_14.into_push_pull_output(Level::Low).degrade(),
                 gpio.p0_22.into_push_pull_output(Level::Low).degrade(),
                 gpio.p0_23.into_push_pull_output(Level::Low).degrade(),
             ),
-            crown: gpio.p0_13.into_floating_input().degrade(),
+            crown,
             screen,
+            touchpad,
         }
     }
 }
