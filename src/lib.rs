@@ -13,10 +13,11 @@ use cst816s::CST816S;                       // touchpad driver
 mod delay;
 use delay::Delay;
 
-pub mod battery_status;
+mod battery_status;
 use battery_status::BatteryStatus;
 mod backlight;
 use backlight::Backlight;
+mod accelerometer;
 
 
 pub struct Pinetime {
@@ -89,7 +90,7 @@ impl Pinetime {
         let touch_interrupt_pin = gpio.p0_28.into_pullup_input();
         let touch_rst = gpio.p0_10.into_push_pull_output(Level::High);
         let touchpad = CST816S::new(i2c_port, touch_interrupt_pin, touch_rst);
-        // Set up accelerometer
+        // Set up accelerometer TODO: implement
 
         Self {
             battery,
