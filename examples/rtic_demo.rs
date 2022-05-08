@@ -24,6 +24,7 @@ mod app {
 
     #[shared]
     struct Shared {
+        // TODO decouple pinetime properties per `local` task need
         pinetime: pinetime_hal::Pinetime,
     }
 
