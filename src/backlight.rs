@@ -1,5 +1,6 @@
 use embedded_hal::digital::v2::OutputPin;
 use nrf52832_hal::gpio::{Output, Pin, PushPull};
+#[cfg(test)]
 use rtt_target::rprintln;
 
 /// There are three active-low backlight pins, each connected to a FET that
@@ -32,7 +33,9 @@ impl Backlight {
         if brightness > 7 {
             brightness = 7;
         }
+        #[cfg(test)]
         rprintln!("Setting backlight brightness to {}", brightness);
+
         if brightness & 0x01 > 0 {
             self.low.set_low().unwrap();
         } else {

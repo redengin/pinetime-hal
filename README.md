@@ -12,12 +12,15 @@ Hardware
     * [embedded-graphics](https://crates.io/crates/embedded-graphics)
 * [Touch Screen](https://crates.io/crates/cst816s)
 * [Accelerometer](src/accelerometer.rs)
+* Heart Rate Sensor (TODO)
+* Vibration (TODO)
+* Flash (TODO) (PM25LV512) (https://crates.io/crates/spi-memory)
 
 Demo
 ================================================================================
 ```sh
-cargo build --example demo --target thumbv7em-none-eabihf
-cargo run --example demo --target thumbv7em-none-eabihf
+cargo build --example rtic_demo --target thumbv7em-none-eabihf
+cargo run --example rtic_demo --target thumbv7em-none-eabihf
 ```
 
 

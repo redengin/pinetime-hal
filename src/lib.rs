@@ -1,10 +1,14 @@
+#![no_std]
+// monotonic timer for rtic scheduling
+pub mod monotonic_nrf52;
+
 use hal::Spim;
 use hal::gpio::{PushPull, PullUp};
 use nrf52832_hal::{self as hal, pac};
 use nrf52832_hal::saadc::{Saadc, SaadcConfig};
-use nrf52832_hal::target::SAADC;
+use nrf52832_hal::pac::SAADC;
 use nrf52832_hal::gpio::{p0, Pin, Input, Output, Floating, Level};
-use nrf52832_hal::target::{SPIM1, TWIM1};
+use nrf52832_hal::pac::{SPIM1, TWIM1};
 use nrf52832_hal::twim::{Twim};
 use display_interface_spi::SPIInterface;
 use st7789::{self, ST7789, Orientation};    // LCD driver
