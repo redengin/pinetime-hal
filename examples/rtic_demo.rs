@@ -38,7 +38,7 @@ mod app {
         // initialize scheduler timer
         let mono = MonoTimer::new(cx.device.TIMER1);
 
-        let pinetime = Pinetime::init(
+        let mut pinetime = Pinetime::init(
             cx.device.TIMER0,
             cx.device.P0,
             cx.device.SAADC,
@@ -48,6 +48,8 @@ mod app {
 
         rtt_init_print!();
         rprintln!("init");
+
+        pinetime.backlight.set(7);
 
         display_task::spawn().ok();
 

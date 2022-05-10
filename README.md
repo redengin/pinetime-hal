@@ -31,36 +31,41 @@ On-Target Test
 ================================================================================
 ```sh
 cargo build --example test_on_host --target thumbv7em-none-eabihf
-# NOTE: you'll need to start openocd in another terminal (from this project directory)
-openocd
+# NOTE: you'll need to start openocd in another terminal (from this project directory that has openocd.cfg)
 cargo run --example test_on_host --target thumbv7em-none-eabihf
 ```
 
 
-Setting up OpenOCD for Pinetime
+Rolling your own OpenOCD for Pinetime
 --------------------------------------------------------------------------------
-If your distro's version of OpenOCD isn't working, use the following to build
-a newer version.
+If your distro's version of OpenOCD isn't working, build it yourself.
 ```sh
-# install hidapi (necessary for CMSIS-DAP)
+git clone https://github.com/ntfreak/openocd --depth=1
+cd openocd
+# add hidapi for CMSSIS-DAP
 git clone https://github.com/Dashlane/hidapi.git --depth=1
 cd hidapi
 ./bootstrap && ./configure
 make -j
-sudo make install
-
-# install openocd
-git clone https://github.com/ntfreak/openocd --depth=1
-cd openocd
-./bootstrap && HIDAPI_LIBS="-lhidapi-hidraw -lpthread" \
+# return to OpenOCD directory
+cd ..
+./bootstrap
+# NOTE: where you see `linux` you can change to `mac`
+HIDAPI_LIBS="-Lhidapi/linux/.libs -lhidapi-hidraw -lpthread" \
+PKG_CONFIG_PATH=hidapi/pc/ \
+CPPFLAGS="-Ihidapi/hidapi" \
     ./configure --enable-cmsis-dap
 make -j
-sudo make install
+```
+To start your own OpenOCD
+```sh
+# NOTE: use this from the project directory which provides an openocd.cfg
+./openocd/src/openocd --search openocd/tcl/
 ```
 
 ### To test it out
 ```sh
-openocd
+./openocd/src/openocd --search openocd/tcl/
 # should result in
 # ...
 # Info : [nrf52.cpu] Cortex-M4 r0p1 processor detected
