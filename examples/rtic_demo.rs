@@ -45,7 +45,7 @@ mod app {
             cx.device.SPIM1,
             cx.device.TWIM1,
         );
-        pinetime.backlight.set(7);
+        pinetime.backlight.set(1);
 
         rtt_init_print!();
         rprintln!("init");

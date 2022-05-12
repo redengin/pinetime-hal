@@ -14,9 +14,9 @@ pub struct BatteryStatus {
     saadc: Saadc,
 
     /// Charging state
-    charging: bool,
+    pub charging: bool,
 
-    millivolts: i16,
+    pub voltage: f32,
 }
 
 impl BatteryStatus {
@@ -31,7 +31,7 @@ impl BatteryStatus {
             pin_voltage,
             saadc,
             charging: false,
-            millivolts: 0,
+            voltage: 0 as f32,
         };
 
         // gather the current state
@@ -45,35 +45,25 @@ impl BatteryStatus {
     }
 
     /// This returns the stored value. To fetch current data, call `update()` first.
-    pub fn millivolts(&self) -> i16 {
-        self.millivolts
+    pub fn voltage(&self) -> f32 {
+        self.voltage
     }
 
-    /// Update the current battery status by reading information from the
-    /// hardware. Return whether or not the values changed.
-    pub fn update(&mut self) -> bool {
-        let mut changed = false;
-
+    /// Update the current battery status by reading information from the hardware.
+    pub fn update(&mut self) {
         // Check charging status
-        let charging = self.pin_charge_indication.is_low().unwrap();
-        if charging != self.charging {
-            self.charging = charging;
-            changed = true;
-        }
+        self.charging =  self.pin_charge_indication.is_low().unwrap();
 
         // Check voltage
-        let millivolts = self.read_millivolts();
-        if millivolts != self.millivolts {
-            self.millivolts = millivolts;
-            changed = true;
-        }
-
-        changed
+        self.voltage = self.read_voltage();
     }
 
-    /// Convert a raw ADC measurement into a battery voltage in 0.1 volts.
-    fn read_millivolts(&mut self) -> i16 {
-        let adc_val = self.saadc.read(&mut self.pin_voltage).unwrap();
-        (adc_val * 2000) / (4095.0 / 3.3) as i16
+    /// Convert a raw ADC measurement into a battery voltage
+    fn read_voltage(&mut self) -> f32 {
+        let adc_read = self.saadc.read(&mut self.pin_voltage);
+        match adc_read {
+            Ok(val) => return (val as f32 * 2.0) / (4095.0 / 3.3),
+            Err(_) => return 0 as f32
+        };
     }
 }
