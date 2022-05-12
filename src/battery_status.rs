@@ -62,7 +62,7 @@ impl BatteryStatus {
         }
 
         // Check voltage
-        let millivolts = self.read_millivolts().unwrap();
+        let millivolts = self.read_millivolts();
         if millivolts != self.millivolts {
             self.millivolts = millivolts;
             changed = true;
@@ -72,12 +72,8 @@ impl BatteryStatus {
     }
 
     /// Convert a raw ADC measurement into a battery voltage in 0.1 volts.
-    fn read_millivolts(&mut self) -> Option<i16> {
+    fn read_millivolts(&mut self) -> i16 {
         let adc_val = self.saadc.read(&mut self.pin_voltage).unwrap();
-        if adc_val < 0 {
-            // What?
-            return None;
-        }
-        Some((adc_val * 2000) / (4095.0 / 3.3) as i16)
+        (adc_val * 2000) / (4095.0 / 3.3) as i16
     }
 }

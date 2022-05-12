@@ -45,11 +45,10 @@ mod app {
             cx.device.SPIM1,
             cx.device.TWIM1,
         );
+        pinetime.backlight.set(7);
 
         rtt_init_print!();
         rprintln!("init");
-
-        pinetime.backlight.set(7);
 
         display_task::spawn().ok();
 
@@ -64,15 +63,17 @@ mod app {
 
     #[task(shared=[pinetime])]
     fn display_task(cx: display_task::Context) {
-        // run at 30Hz
-        display_task::spawn_after(33.millis()).unwrap();
-
         let mut pinetime = cx.shared.pinetime;
         (pinetime).lock(|pinetime| {
+            pinetime.backlight.set(7);
+
             let text_style = MonoTextStyle::new(&FONT_6X9, Rgb565::GREEN);
             Text::new("Hello World!", Point::new(0,0), text_style)
                 .draw(&mut pinetime.screen)
                 .unwrap();
         });
+
+        // run at 30Hz
+        display_task::spawn_after(33.millis()).unwrap();
     }
 }
