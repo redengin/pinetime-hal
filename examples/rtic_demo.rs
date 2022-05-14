@@ -15,6 +15,8 @@ mod app {
     use embedded_graphics::{
         prelude::*,
         pixelcolor::Rgb565,
+        primitives::{PrimitiveStyleBuilder, Rectangle},
+        // text::TextStyleBuilder,
         text::Text,
         mono_font::{ascii::FONT_6X9, MonoTextStyle},
     };
@@ -35,6 +37,9 @@ mod app {
 
     #[init]
     fn init(cx: init::Context) -> (Shared, Local, init::Monotonics) {
+        rtt_init_print!();
+        rprintln!("init");
+
         // initialize scheduler timer
         let mono = MonoTimer::new(cx.device.TIMER1);
 
@@ -47,10 +52,15 @@ mod app {
         );
         pinetime.backlight.set(1);
 
-        rtt_init_print!();
-        rprintln!("init");
-
-        display_task::spawn().ok();
+        // clear the screen
+        let backdrop_style = PrimitiveStyleBuilder::new()
+            .fill_color(Rgb565::BLACK)
+            .build();
+        Rectangle::new(Point::new(0, 0), Size::new(pinetime_hal::SCREEN_WIDTH, pinetime_hal::SCREEN_HEIGHT))
+            .into_styled(backdrop_style)
+            .draw(&mut pinetime.lcd)
+            .unwrap();
+        display_task::spawn().unwrap();
 
         ( Shared {
             pinetime,
@@ -69,7 +79,7 @@ mod app {
 
             let text_style = MonoTextStyle::new(&FONT_6X9, Rgb565::GREEN);
             Text::new("Hello World!", Point::new(0,0), text_style)
-                .draw(&mut pinetime.screen)
+                .draw(&mut pinetime.lcd)
                 .unwrap();
         });
 
