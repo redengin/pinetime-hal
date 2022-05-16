@@ -16,27 +16,38 @@ Hardware
 * Vibration (TODO)
 * Flash (TODO) (PM25LV512) (https://crates.io/crates/spi-memory)
 
-Demo
+Demo on the Pinetime
 ================================================================================
 ```sh
-cargo build --example rtic_demo --target thumbv7em-none-eabihf
+cargo build --example rtic_demo
+
+# Using Rust's cargo-embed (see below for setup)
+# NOTE: you'll need to run cargo embed from this project directory (which provides an Embed.toml)
+cargo embed --example rtic_demo
+
+# Using OpenOcd
 # NOTE: you'll need to start openocd in another terminal (from this project directory)
 openocd
-cargo run --example rtic_demo --target thumbv7em-none-eabihf
+cargo run --example rtic_demo
 ```
 
-
-
-On-Target Test
+Setting up JTAG
 ================================================================================
+The **preferred method** is to use [probe-rs](https://probe.rs/docs/getting-started/probe-setup/).
+--------------------------------------------------------------------------------
+`Probe.rs` is a rust implementation that provides both a
+debugger (i.e. what gdb does) as well as support for common
+debugger hardware (i.e. what openocd does).
 ```sh
-cargo build --example test_on_host --target thumbv7em-none-eabihf
-# NOTE: you'll need to start openocd in another terminal (from this project directory that has openocd.cfg)
-cargo run --example test_on_host --target thumbv7em-none-eabihf
+# install the flashing utilities
+cargo install cargo-flash
+# install the advanced embedded debug utilities
+cargo install cargo-embed
 ```
+Note, you may have to update your STLink firmware:
+https://www.st.com/resource/en/data_brief/stsw-link007.pdf
 
-
-Rolling your own OpenOCD for Pinetime
+**Alternatively**, you can use OpenOCD
 --------------------------------------------------------------------------------
 If your distro's version of OpenOCD isn't working, build it yourself.
 ```sh
