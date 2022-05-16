@@ -24,6 +24,7 @@ use battery_status::BatteryStatus;
 mod backlight;
 use backlight::Backlight;
 mod accelerometer;
+use rubble_nrf5x::radio::{BleRadio, PacketBuffer};
 
 pub const SCREEN_WIDTH: u32 = 240;
 pub const SCREEN_HEIGHT: u32 = 240;
@@ -44,6 +45,9 @@ pub struct Pinetime {
         p0::P0_28<Input<PullUp>>,           // interrupt pin
         p0::P0_10<Output<PushPull>>,        // reset pin
     >,
+    pub ble_radio: BleRadio,
+    ble_tx_buffer: PacketBuffer,
+    ble_rx_buffer: PacketBuffer,
 }
 
 impl Pinetime {
@@ -53,6 +57,8 @@ impl Pinetime {
                 hw_saddc: SAADC,
                 hw_spi0: pac::SPIM0,
                 hw_twim1: pac::TWIM1,
+                hw_ble_radio: pac::RADIO,
+                hw_ficr: pac::FICR,
     ) -> Self {
         // Set up GPIO
         let gpio = hal::gpio::p0::Parts::new(hw_gpio);
@@ -99,6 +105,8 @@ impl Pinetime {
         let touchpad = CST816S::new(i2c_port, touch_interrupt_pin, touch_rst);
         // Set up accelerometer TODO: implement
 
+        // Set up Bluetooth TODO update rubble
+
         Self {
             battery,
             backlight: Backlight::init(
@@ -109,6 +117,9 @@ impl Pinetime {
             crown,
             lcd,
             touchpad,
+            ble_radio,
+            ble_tx_buffer,
+            ble_rx_buffer,
         }
     }
 }
