@@ -70,12 +70,8 @@ mod app {
         pinetime.lcd.clear(Rgb565::BLACK).unwrap();
 
         let text_style = MonoTextStyle::new(&FONT_6X10, Rgb565::WHITE);
-        Text::new("Pinetime", Point::new(0,0), text_style)
+        Text::new("Pinetime", Point::new(0, 6), text_style)
             .draw(&mut pinetime.lcd)
             .unwrap();
-
-        // run at 30Hz
-        // display_task::spawn_after(33.millis()).unwrap();
-        display_task::spawn_after(1000.millis()).unwrap();
     }
 }
