@@ -46,6 +46,8 @@ mod app {
             cx.device.SAADC,
             cx.device.SPIM0,
             cx.device.TWIM1,
+            cx.device.RADIO,
+            cx.device.FICR,
         );
 
         display_task::spawn().unwrap();
