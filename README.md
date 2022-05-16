@@ -19,16 +19,14 @@ Hardware
 Demo on the Pinetime
 ================================================================================
 ```sh
-cargo build --example rtic_demo
-
 # Using Rust's cargo-embed (see below for setup)
 # NOTE: you'll need to run cargo embed from this project directory (which provides an Embed.toml)
-cargo embed --example rtic_demo
+cargo embed --release --example rtic_demo
 
 # Using OpenOcd
 # NOTE: you'll need to start openocd in another terminal (from this project directory)
 openocd
-cargo run --example rtic_demo
+cargo run --release --example rtic_demo
 ```
 
 Setting up JTAG
@@ -46,6 +44,19 @@ cargo install cargo-embed
 ```
 Note, you may have to update your STLink firmware:
 https://www.st.com/resource/en/data_brief/stsw-link007.pdf
+
+### [Integrating Probe-rs with VSCode](https://probe.rs/docs/tools/vscode/)
+```sh
+# update url to latest available
+curl -L https://github.com/probe-rs/vscode/releases/download/v0.4.0/probe-rs-debugger-0.4.0.vsix \
+    --output probe-rs-debugger.vsix
+# install it into VSCode
+code --install-extension probe-rs-debugger.vsix
+# install the probe-rs debugger
+cargo install --git https://github.com/probe-rs/probe-rs probe-rs-debugger
+```
+**TODO** the `.vscode/launch.json` is not currently working.
+
 
 **Alternatively**, you can use OpenOCD
 --------------------------------------------------------------------------------

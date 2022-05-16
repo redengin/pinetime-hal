@@ -15,6 +15,8 @@ mod app {
     use embedded_graphics::{
         prelude::*,
         pixelcolor::Rgb565,
+        mono_font::{MonoTextStyle, ascii::FONT_6X10},
+        text::Text,
     };
 
     #[monotonic(binds = TIMER1, default = true)]
@@ -22,13 +24,12 @@ mod app {
 
     #[shared]
     struct Shared {
-        // TODO decouple pinetime properties per `local` task need
-        pinetime: pinetime_hal::Pinetime,
     }
 
 
     #[local]
     struct Local {
+        pinetime: pinetime_hal::Pinetime,
     }
 
     #[init]
@@ -39,7 +40,7 @@ mod app {
         // initialize scheduler timer
         let mono = MonoTimer::new(cx.device.TIMER1);
 
-        let mut pinetime = Pinetime::init(
+        let pinetime = Pinetime::init(
             cx.device.TIMER0,
             cx.device.P0,
             cx.device.SAADC,
@@ -47,34 +48,34 @@ mod app {
             cx.device.TWIM1,
         );
 
-        // clear the screen
-        pinetime.lcd.clear(Rgb565::BLACK).unwrap();
-
-
         display_task::spawn().unwrap();
 
         ( Shared {
-            pinetime,
           },
           Local {
+            pinetime,
           },
           init::Monotonics(mono)
         )
     }
 
-    #[task(shared=[pinetime])]
+    #[task(local=[pinetime])]
     fn display_task(cx: display_task::Context) {
-        let mut pinetime = cx.shared.pinetime;
-        (pinetime).lock(|pinetime| {
-            pinetime.backlight.set(7);
+        let pinetime = cx.local.pinetime;
 
-            // let text_style = MonoTextStyle::new(&FONT_6X9, Rgb565::GREEN);
-            // Text::new("Hello World!", Point::new(0,0), text_style)
-            //     .draw(&mut pinetime.lcd)
-            //     .unwrap();
-        });
+        // set the backlight
+        pinetime.backlight.set(3);
+
+        // clear the screen
+        pinetime.lcd.clear(Rgb565::BLACK).unwrap();
+
+        let text_style = MonoTextStyle::new(&FONT_6X10, Rgb565::WHITE);
+        Text::new("Pinetime", Point::new(0,0), text_style)
+            .draw(&mut pinetime.lcd)
+            .unwrap();
 
         // run at 30Hz
-        display_task::spawn_after(33.millis()).unwrap();
+        // display_task::spawn_after(33.millis()).unwrap();
+        display_task::spawn_after(1000.millis()).unwrap();
     }
 }
