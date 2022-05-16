@@ -1,4 +1,8 @@
 #![no_std]
+// embedded-hal traits
+mod delay;
+use delay::Delay;
+
 // monotonic timer for rtic scheduling
 pub mod monotonic_nrf52;
 
@@ -8,14 +12,12 @@ use hal::gpio::{PushPull, PullUp};
 use hal::saadc::{Saadc, SaadcConfig};
 use hal::pac::SAADC;
 use hal::gpio::{p0, Pin, Input, Output, Floating, Level};
-use hal::pac::{SPIM1, TWIM1};
+use hal::pac::{SPIM0, TWIM1};
 use hal::twim::{Twim};
 use display_interface_spi::SPIInterface;
-use st7789::{self, ST7789, Orientation};    // LCD driver
-use cst816s::CST816S;                       // touchpad driver
-// embedded-hal traits
-mod delay;
-use delay::Delay;
+use st7789::{self, ST7789}; // LCD driver
+use cst816s::CST816S;       // touchpad driver
+
 
 mod battery_status;
 use battery_status::BatteryStatus;
@@ -32,7 +34,7 @@ pub struct Pinetime {
     pub crown: Pin<Input<Floating>>,
     pub lcd: st7789::ST7789<
         SPIInterface<
-            Spim<SPIM1>,
+            Spim<SPIM0>,
             p0::P0_18<Output<PushPull>>,    // data/command pin
             p0::P0_25<Output<PushPull>>,    // chip select
         >,
@@ -49,7 +51,7 @@ impl Pinetime {
                 hw_timer0: pac::TIMER0,
                 hw_gpio: pac::P0,
                 hw_saddc: SAADC,
-                hw_spi1: pac::SPIM1,
+                hw_spi0: pac::SPIM0,
                 hw_twim1: pac::TWIM1,
     ) -> Self {
         // Set up GPIO
@@ -64,15 +66,15 @@ impl Pinetime {
         // enable crown
         gpio.p0_15.into_push_pull_output(Level::High);
         let crown = gpio.p0_13.into_floating_input().degrade();
-        // Set up SPI1
-        let spi1_pins = hal::spim::Pins {
+        // Set up SPI0
+        let spi0_pins = hal::spim::Pins {
             sck: gpio.p0_02.into_push_pull_output(Level::Low).degrade(),
             mosi: Some(gpio.p0_03.into_push_pull_output(Level::Low).degrade()),
             miso: Some(gpio.p0_04.into_floating_input().degrade()),
         };
-        let spi1 = hal::Spim::new(
-            hw_spi1,
-            spi1_pins,
+        let spi0 = hal::Spim::new(
+            hw_spi0,
+            spi0_pins,
             // 8MHz to maximize screen refresh
             hal::spim::Frequency::M8,
             hal::spim::MODE_3,
@@ -81,13 +83,11 @@ impl Pinetime {
         // Set up LCD
         let lcd_cs = gpio.p0_25.into_push_pull_output(Level::High);
         let lcd_dc = gpio.p0_18.into_push_pull_output(Level::Low); // data/clock switch
-        let lcd_di = SPIInterface::new(spi1, lcd_dc, lcd_cs);
+        let lcd_di = SPIInterface::new(spi0, lcd_dc, lcd_cs);
         let lcd_rst = gpio.p0_26.into_push_pull_output(Level::Low); // reset pin
         let mut lcd= ST7789::new(lcd_di, lcd_rst, SCREEN_WIDTH as u16, SCREEN_HEIGHT as u16);
         let mut lcd_delay = Delay::init(hw_timer0);
         lcd.init(&mut lcd_delay).unwrap();
-        // TEST-USE-ONLY see if lcd is receiving commands
-        // lcd.set_orientation(Orientation::Landscape).unwrap();
         // Set up Touchpad
         let i2c_pins = hal::twim::Pins {
             scl: gpio.p0_07.into_floating_input().degrade(),

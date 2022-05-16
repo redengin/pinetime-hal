@@ -15,10 +15,6 @@ mod app {
     use embedded_graphics::{
         prelude::*,
         pixelcolor::Rgb565,
-        primitives::{PrimitiveStyleBuilder, Rectangle},
-        // text::TextStyleBuilder,
-        text::Text,
-        mono_font::{ascii::FONT_6X9, MonoTextStyle},
     };
 
     #[monotonic(binds = TIMER1, default = true)]
@@ -47,19 +43,14 @@ mod app {
             cx.device.TIMER0,
             cx.device.P0,
             cx.device.SAADC,
-            cx.device.SPIM1,
+            cx.device.SPIM0,
             cx.device.TWIM1,
         );
-        pinetime.backlight.set(1);
 
         // clear the screen
-        let backdrop_style = PrimitiveStyleBuilder::new()
-            .fill_color(Rgb565::BLACK)
-            .build();
-        Rectangle::new(Point::new(0, 0), Size::new(pinetime_hal::SCREEN_WIDTH, pinetime_hal::SCREEN_HEIGHT))
-            .into_styled(backdrop_style)
-            .draw(&mut pinetime.lcd)
-            .unwrap();
+        pinetime.lcd.clear(Rgb565::BLACK).unwrap();
+
+
         display_task::spawn().unwrap();
 
         ( Shared {
@@ -77,10 +68,10 @@ mod app {
         (pinetime).lock(|pinetime| {
             pinetime.backlight.set(7);
 
-            let text_style = MonoTextStyle::new(&FONT_6X9, Rgb565::GREEN);
-            Text::new("Hello World!", Point::new(0,0), text_style)
-                .draw(&mut pinetime.lcd)
-                .unwrap();
+            // let text_style = MonoTextStyle::new(&FONT_6X9, Rgb565::GREEN);
+            // Text::new("Hello World!", Point::new(0,0), text_style)
+            //     .draw(&mut pinetime.lcd)
+            //     .unwrap();
         });
 
         // run at 30Hz
