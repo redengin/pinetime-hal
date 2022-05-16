@@ -9,7 +9,7 @@ mod app {
     use nrf52832_hal as _;
     use rtt_target::{rprintln, rtt_init_print};
     use pinetime_hal::monotonic_nrf52::{MonoTimer};
-    use fugit::{self, ExtU32};
+    // use fugit::{self, ExtU32};
     use pinetime_hal::Pinetime;
 
     use embedded_graphics::{

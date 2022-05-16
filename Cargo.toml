@@ -3,7 +3,7 @@ authors = ["redengin <sholstei@yahoo.com>"]
 edition = "2018"
 readme = "README.md"
 name = "pinetime-hal"
-version = "0.1.0"
+version = "0.0.1"
 
 [dependencies]
 embedded-hal = "0.2"
