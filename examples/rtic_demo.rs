@@ -14,7 +14,7 @@ mod app {
     use embedded_graphics::{
         prelude::*,
         pixelcolor::Rgb565,
-        mono_font::{MonoTextStyle, ascii::FONT_6X10},
+        mono_font::{MonoTextStyle, ascii::FONT_10X20},
         text::Text,
     };
 
@@ -60,6 +60,9 @@ mod app {
         // set the backlight
         pinetime.backlight.set(3);
 
+        // spawn initial tasks
+        display_task::spawn().unwrap();
+
         ( Shared {
             spi_peripherals: pinetime_hal::SharedSpi {
                 lcd: pinetime.lcd,
@@ -81,10 +84,10 @@ mod app {
     #[task(shared=[spi_peripherals], local=[backlight])]
     fn display_task(mut cx: display_task::Context) {
 
-        let text_style = MonoTextStyle::new(&FONT_6X10, Rgb565::WHITE);
+        let text_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
         cx.shared.spi_peripherals.lock(|bus| {
 
-            Text::new("Pinetime", Point::new(0, 6), text_style)
+            Text::new("Pinetime", Point::new(0, 15), text_style)
                 .draw(&mut bus.lcd)
                 .unwrap();
         });
