@@ -6,7 +6,6 @@ use panic_rtt_target as _;
 
 #[rtic::app(device = nrf52832_hal::pac, peripherals = true, dispatchers = [SWI0_EGU0])]
 mod app {
-    use nrf52832_hal::{self as hal, pac} ;
     use rtt_target::{rprintln, rtt_init_print};
     use pinetime_hal::monotonic_nrf52::{MonoTimer};
     // use fugit::{self, ExtU32};
@@ -46,7 +45,7 @@ mod app {
         // initialize scheduler timer
         let mono = MonoTimer::new(cx.device.TIMER1);
 
-        let pinetime = Pinetime::init(
+        let mut pinetime = Pinetime::init(
             cx.device.TIMER0,
             cx.device.P0,
             cx.device.SAADC,
@@ -56,7 +55,10 @@ mod app {
             cx.device.FICR,
         );
 
-        // display_task::spawn().unwrap();
+        // clear the display
+        pinetime.lcd.clear(Rgb565::BLACK).unwrap();
+        // set the backlight
+        pinetime.backlight.set(3);
 
         ( Shared {
             spi_peripherals: pinetime_hal::SharedSpi {
@@ -76,19 +78,15 @@ mod app {
         )
     }
 
-    // #[task(local=[pinetime])]
-    // fn display_task(cx: display_task::Context) {
-    //     let pinetime = cx.local.pinetime;
+    #[task(shared=[spi_peripherals], local=[backlight])]
+    fn display_task(mut cx: display_task::Context) {
 
-    //     // set the backlight
-    //     pinetime.backlight.set(3);
+        let text_style = MonoTextStyle::new(&FONT_6X10, Rgb565::WHITE);
+        cx.shared.spi_peripherals.lock(|bus| {
 
-    //     // clear the screen
-    //     pinetime.lcd.clear(Rgb565::BLACK).unwrap();
-
-    //     let text_style = MonoTextStyle::new(&FONT_6X10, Rgb565::WHITE);
-    //     Text::new("Pinetime", Point::new(0, 6), text_style)
-    //         .draw(&mut pinetime.lcd)
-    //         .unwrap();
-    // }
+            Text::new("Pinetime", Point::new(0, 6), text_style)
+                .draw(&mut bus.lcd)
+                .unwrap();
+        });
+    }
 }
