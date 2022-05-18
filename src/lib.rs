@@ -25,6 +25,8 @@ use battery_status::BatteryStatus;
 mod backlight;
 use backlight::Backlight;
 mod accelerometer;
+mod vibrator;
+use vibrator::Vibrator;
 
 pub const SCREEN_WIDTH: u32 = 240;
 pub const SCREEN_HEIGHT: u32 = 240;
@@ -33,6 +35,7 @@ pub struct Pinetime {
     pub battery: BatteryStatus,
     pub backlight: Backlight,
     pub crown: Pin<Input<Floating>>,
+    pub vibrator: Vibrator,
     pub lcd: st7789::ST7789<
         SPIInterface<
             SharedBus<Spim<SPIM0>>,
@@ -127,6 +130,9 @@ impl Pinetime {
                 gpio.p0_23.into_push_pull_output(Level::Low).degrade(),
             ),
             crown,
+            vibrator: Vibrator::new(
+                gpio.p0_16.into_push_pull_output(Level::Low).degrade(),
+            ),
             lcd,
             touchpad,
             heartrate,
