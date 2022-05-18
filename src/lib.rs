@@ -35,7 +35,7 @@ pub struct Pinetime {
     pub crown: Pin<Input<Floating>>,
     pub lcd: st7789::ST7789<
         SPIInterface<
-            Spim<SPIM0>,
+            SharedBus<Spim<SPIM0>>,
             p0::P0_18<Output<PushPull>>,    // data/command pin
             p0::P0_25<Output<PushPull>>,    // chip select
         >,
@@ -53,8 +53,8 @@ impl Pinetime {
                 hw_timer0: pac::TIMER0,
                 hw_gpio: pac::P0,
                 hw_saddc: SAADC,
-                hw_spi0: pac::SPIM0,
-                hw_twim1: pac::TWIM1,
+                hw_spi: pac::SPIM0,
+                hw_i2c: pac::TWIM1,
                 _hw_ble_radio: pac::RADIO,
                 _hw_ficr: pac::FICR,
     ) -> Self {
@@ -74,35 +74,36 @@ impl Pinetime {
         let crown = gpio.p0_13.into_floating_input().degrade();
 
         // Set up SPI0
-        let spi0_pins = hal::spim::Pins {
+        let spi_pins = hal::spim::Pins {
             sck: gpio.p0_02.into_push_pull_output(Level::Low).degrade(),
             mosi: Some(gpio.p0_03.into_push_pull_output(Level::Low).degrade()),
             miso: Some(gpio.p0_04.into_floating_input().degrade()),
         };
-        let spi0 = hal::Spim::new(
-            hw_spi0,
-            spi0_pins,
+        let spi = hal::Spim::new(
+            hw_spi,
+            spi_pins,
             // 8MHz to maximize screen refresh
             hal::spim::Frequency::M8,
             hal::spim::MODE_3,
             0,  // fill transmissions with tailing zeros (TODO: should this be 122?)
         );
+        let spi_bus = shared_bus_rtic::new!(spi, Spim<SPIM0>);
 
         // Set up LCD
         let lcd_cs = gpio.p0_25.into_push_pull_output(Level::High);
         let lcd_dc = gpio.p0_18.into_push_pull_output(Level::Low); // data/clock switch
-        let lcd_di = SPIInterface::new(spi0, lcd_dc, lcd_cs);
+        let lcd_di = SPIInterface::new(spi_bus, lcd_dc, lcd_cs);
         let lcd_rst = gpio.p0_26.into_push_pull_output(Level::Low); // reset pin
         let mut lcd= ST7789::new(lcd_di, lcd_rst, SCREEN_WIDTH as u16, SCREEN_HEIGHT as u16);
         let mut lcd_delay = Delay::init(hw_timer0);
         lcd.init(&mut lcd_delay).unwrap();
 
         // Set up I2C
-        let touchpad_i2c_pins = hal::twim::Pins {
+        let i2c_pins = hal::twim::Pins {
             scl: gpio.p0_07.into_floating_input().degrade(),
             sda: gpio.p0_06.into_floating_input().degrade(),
         };
-        let i2c_port = hal::twim::Twim::new(hw_twim1, touchpad_i2c_pins, hal::twim::Frequency::K400);
+        let i2c_port = hal::twim::Twim::new(hw_i2c, i2c_pins, hal::twim::Frequency::K400);
         let i2c_bus = shared_bus_rtic::new!(i2c_port, Twim<TWIM1>);
 
         // Set up Touchpad
