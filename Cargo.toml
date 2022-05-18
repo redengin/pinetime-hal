@@ -18,7 +18,7 @@ shared-bus-rtic = "0.2"
 cst816s = "0.1"
 # heartrate sensor
 hrs3300 = "0.1"
-# bluetooth driver (TODO update rubble)
+# bluetooth driver
 # rubble-nrf5x = { version = "0.0", features = ["52832"] }
 
 

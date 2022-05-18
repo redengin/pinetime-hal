@@ -10,26 +10,47 @@ use nrf52832_hal::{self as hal, pac};
 use hal::Spim;
 use hal::gpio::{p0, Pin, PushPull, PullUp, Input, Output, Floating, Level};
 use hal::saadc::{Saadc, SaadcConfig};
-use hal::pac::SAADC;
-use hal::pac::{SPIM0, TWIM1};
-use hal::twim::{Twim};
-use shared_bus_rtic::{SharedBus};
-use hrs3300::{Hrs3300};
+use hal::pac::{SAADC, SPIM0, TWIM1};
+use hal::twim::Twim;
+use shared_bus_rtic::SharedBus;
+use st7789::ST7789;
+use hrs3300::Hrs3300;
 use display_interface_spi::SPIInterface;
-use st7789::{self, ST7789}; // LCD driver
 use cst816s::CST816S;       // touchpad driver
 
 
-mod battery_status;
+pub mod battery_status;
 use battery_status::BatteryStatus;
-mod backlight;
+pub mod backlight;
 use backlight::Backlight;
 mod accelerometer;
-mod vibrator;
+pub mod vibrator;
 use vibrator::Vibrator;
 
 pub const SCREEN_WIDTH: u32 = 240;
 pub const SCREEN_HEIGHT: u32 = 240;
+
+// under RTIC, shared busses need to be locked https://github.com/ryan-summers/shared-bus-rtic
+pub struct SharedSpi {
+    pub lcd: st7789::ST7789<
+        SPIInterface<
+            SharedBus<hal::Spim<pac::SPIM0>>,
+            p0::P0_18<Output<PushPull>>,    // data/command pin
+            p0::P0_25<Output<PushPull>>,    // chip select
+        >,
+        p0::P0_26<Output<PushPull>>,        // reset pin
+    >,
+    // TODO add flash
+}
+
+// under RTIC, shared busses need to be locked https://github.com/ryan-summers/shared-bus-rtic
+pub struct SharedI2c {
+    pub touchpad: CST816S<SharedBus<Twim<TWIM1>>,
+        p0::P0_28<Input<PullUp>>,           // interrupt pin
+        p0::P0_10<Output<PushPull>>,        // reset pin
+    >,
+    pub heartrate: Hrs3300<SharedBus<Twim<TWIM1>>>,
+}
 
 pub struct Pinetime {
     pub battery: BatteryStatus,
@@ -56,7 +77,7 @@ impl Pinetime {
                 hw_timer0: pac::TIMER0,
                 hw_gpio: pac::P0,
                 hw_saddc: SAADC,
-                hw_spi: pac::SPIM0,
+                hw_spi: pac::SPIM0, // SPIM0 required by ST7789 (otherwise dma transfers don't trigger)
                 hw_i2c: pac::TWIM1,
                 _hw_ble_radio: pac::RADIO,
                 _hw_ficr: pac::FICR,
