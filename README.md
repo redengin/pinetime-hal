@@ -11,8 +11,8 @@ Hardware
 * [Screen](https://crates.io/crates/st7789)
     * [embedded-graphics](https://crates.io/crates/embedded-graphics)
 * [Touch Screen](https://crates.io/crates/cst816s)
+* [Heart Rate Sensor](https://crates.io/crates/hrs3300)
 * [Accelerometer](src/accelerometer.rs)
-* Heart Rate Sensor (TODO)
 * Vibration (TODO)
 * Flash (TODO) (PM25LV512) (https://crates.io/crates/spi-memory)
 
