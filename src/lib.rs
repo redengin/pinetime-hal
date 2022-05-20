@@ -106,8 +106,8 @@ impl Pinetime {
         let lcd_di = SPIInterface::new(spi_bus, lcd_dc, lcd_cs);
         let lcd_rst = gpio.p0_26.into_push_pull_output(Level::Low); // reset pin
         let mut lcd= ST7789::new(lcd_di, lcd_rst, SCREEN_WIDTH as u16, SCREEN_HEIGHT as u16);
-        let mut lcd_timer= hal::timer::Timer::new(hw_timer0);
-        lcd.init(&mut lcd_timer).unwrap();
+        let mut timer= hal::timer::Timer::new(hw_timer0);
+        lcd.init(&mut timer).unwrap();
 
         // Set up I2C
         let i2c_pins = hal::twim::Pins {
@@ -120,7 +120,8 @@ impl Pinetime {
         // Set up Touchpad
         let touch_interrupt_pin = gpio.p0_28.into_pullup_input();
         let touch_rst = gpio.p0_10.into_push_pull_output(Level::High);
-        let touchpad = CST816S::new(i2c_bus.acquire(), touch_interrupt_pin, touch_rst);
+        let mut touchpad = CST816S::new(i2c_bus.acquire(), touch_interrupt_pin, touch_rst);
+        touchpad.setup(&mut timer).unwrap();
 
         // Set up accelerometer TODO: implement
 
