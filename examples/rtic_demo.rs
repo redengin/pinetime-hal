@@ -89,7 +89,7 @@ mod app {
         let charging = cx.local.battery.is_charging();
         let mut touchEvent = None;
         cx.shared.i2c_peripherals.lock(|i2c| {
-            touchEvent = i2c.touchpad.read_one_touch_event(true);
+            touchEvent = i2c.touchpad.read_one_touch_event(false);
         });
 
         // create a non-transparent font
