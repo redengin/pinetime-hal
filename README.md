@@ -15,16 +15,20 @@ Hardware
 
 Demo on the Pinetime
 ================================================================================
+Using Probe-rs (recommended)
+--------------------------------------------------------------------------------
 ```sh
 # Using Rust's cargo-embed (see below for setup)
 # NOTE: you'll need to run cargo embed from this project directory (which provides an Embed.toml)
 cargo embed --release --example rtic_demo
-
-# Using OpenOcd
-# NOTE: you'll need to start openocd in another terminal (from this project directory)
-openocd
+```
+Using OpenOcd
+--------------------------------------------------------------------------------
+```sh
+# NOTE: you'll need to start openocd in another terminal
 cargo run --release --example rtic_demo
 ```
+**Tapping on the screen** marks the touch with an **X**.
 
 Setting up JTAG
 ================================================================================
@@ -82,7 +86,7 @@ To start your own OpenOCD
 ./openocd/src/openocd --search openocd/tcl/
 ```
 
-### To test it out
+### Testing out your OpenOcd
 ```sh
 ./openocd/src/openocd --search openocd/tcl/
 # should result in
@@ -99,4 +103,5 @@ gdb-multiarch -q target/thumbv7em-none-eabihf/debug/examples/rtic_demo
     load
     continue
 # you shouldn't see any errors in your `openocd` terminal
+# the demo should run on the pinetime
 ```
