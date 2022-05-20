@@ -29,6 +29,7 @@ cortex-m-rtic = "1.0"
 panic-rtt-target = { version = "0.1", features = ["cortex-m"] }
 rtt-target = { version = "0.3", features = ["cortex-m"]}
 embedded-graphics = "0.7"
+heapless = { version = "0.7", default-features = false }
 
 
 [profile.release]

@@ -6,17 +6,18 @@ use panic_rtt_target as _;
 
 #[rtic::app(device = nrf52832_hal::pac, peripherals = true, dispatchers = [SWI0_EGU0])]
 mod app {
-    use rtt_target::{rprintln, rtt_init_print};
-    use pinetime_hal::monotonic_nrf52::{MonoTimer};
-    // use fugit::{self, ExtU32};
     use pinetime_hal::Pinetime;
-
+    use pinetime_hal::monotonic_nrf52::{MonoTimer};
+    use fugit::{self, ExtU32};
     use embedded_graphics::{
         prelude::*,
         pixelcolor::Rgb565,
         mono_font::{MonoTextStyle, ascii::FONT_10X20},
         text::Text,
     };
+    use heapless::String;
+    use core::fmt::Write;
+    use rtt_target::{rprintln, rtt_init_print};
 
     #[monotonic(binds = TIMER1, default = true)]
     type Tonic = MonoTimer<nrf52832_hal::pac::TIMER1>;
@@ -32,9 +33,9 @@ mod app {
     #[local]
     struct Local {
         battery: pinetime_hal::battery_status::BatteryStatus,
-        backlight: pinetime_hal::backlight::Backlight,
+        // backlight: pinetime_hal::backlight::Backlight,
         // crown: Pin<Input<Floating>>,
-        vibrator: pinetime_hal::vibrator::Vibrator,
+        // vibrator: pinetime_hal::vibrator::Vibrator,
     }
 
     #[init]
@@ -74,22 +75,48 @@ mod app {
           },
           Local {
             battery: pinetime.battery,
-            backlight: pinetime.backlight,
-            vibrator: pinetime.vibrator,
+            // backlight: pinetime.backlight,
+            // vibrator: pinetime.vibrator,
           },
           init::Monotonics(mono)
         )
     }
 
-    #[task(shared=[spi_peripherals], local=[backlight])]
+    #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery])]
     fn display_task(mut cx: display_task::Context) {
 
+        let millivolts = cx.local.battery.millivolts();
+        let charging = cx.local.battery.is_charging();
+
         let text_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
-        cx.shared.spi_peripherals.lock(|bus| {
+        cx.shared.spi_peripherals.lock(|spi| {
+
+            // clear the display
+            spi.lcd.clear(Rgb565::BLACK).unwrap();
 
             Text::new("Pinetime", Point::new(0, 15), text_style)
-                .draw(&mut bus.lcd)
+                .draw(&mut spi.lcd)
+                .unwrap();
+
+            let mut charging_text = String::<50>::from("charging ");
+            match charging {
+                Ok(value) => write!(charging_text, "{:3}", value),
+                Err(_) => write!(charging_text, "failed"),
+            }.unwrap();
+            Text::new(charging_text.as_str(), Point::new(25, 40), text_style)
+                .draw(&mut spi.lcd)
+                .unwrap();
+
+            let mut millivolts_text = String::<50>::from("millivolts ");
+            match millivolts {
+                Ok(value) => write!(millivolts_text, "{:3}", value),
+                Err(_) => write!(millivolts_text, "failed"),
+            }.unwrap();
+            Text::new(millivolts_text.as_str(), Point::new(25, 60), text_style)
+                .draw(&mut spi.lcd)
                 .unwrap();
         });
+
+        display_task::spawn_after(1.secs()).unwrap();
     }
 }
