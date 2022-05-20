@@ -87,6 +87,11 @@ mod app {
 
         let millivolts = cx.local.battery.millivolts();
         let charging = cx.local.battery.is_charging();
+        let mut touchEvent = None;
+        cx.shared.i2c_peripherals.lock(|i2c| {
+            touchEvent = i2c.touchpad.read_one_touch_event(true);
+        });
+
 
         let text_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
         cx.shared.spi_peripherals.lock(|spi| {
@@ -94,27 +99,38 @@ mod app {
             // clear the display
             spi.lcd.clear(Rgb565::BLACK).unwrap();
 
+            // display a header
             Text::new("Pinetime", Point::new(0, 15), text_style)
                 .draw(&mut spi.lcd)
                 .unwrap();
 
+            // display charging status
             let mut charging_text = String::<50>::from("charging ");
             match charging {
-                Ok(value) => write!(charging_text, "{:3}", value),
-                Err(_) => write!(charging_text, "failed"),
-            }.unwrap();
+                Ok(value) => { write!(charging_text, "{:3}", value).unwrap() },
+                Err(_) => { write!(charging_text, "failed").unwrap() },
+            };
             Text::new(charging_text.as_str(), Point::new(25, 40), text_style)
                 .draw(&mut spi.lcd)
                 .unwrap();
 
+            // display voltage status
             let mut millivolts_text = String::<50>::from("millivolts ");
             match millivolts {
-                Ok(value) => write!(millivolts_text, "{:3}", value),
-                Err(_) => write!(millivolts_text, "failed"),
-            }.unwrap();
+                Ok(value) => { write!(millivolts_text, "{:3}", value).unwrap() }, 
+                Err(_) => { write!(millivolts_text, "failed").unwrap() },
+            };
             Text::new(millivolts_text.as_str(), Point::new(25, 60), text_style)
                 .draw(&mut spi.lcd)
                 .unwrap();
+
+            // display touch point
+            match touchEvent {
+                Some(touchEvent) => { Text::new("X", Point::new(touchEvent.x, touchEvent.y), text_style)
+                                                    .draw(&mut spi.lcd).unwrap();
+                                    },
+                None => {},
+            };
         });
 
         display_task::spawn_after(1.secs()).unwrap();
