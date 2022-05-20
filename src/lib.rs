@@ -3,10 +3,10 @@
 pub mod monotonic_nrf52;
 
 use nrf52832_hal::{self as hal, pac};
-use hal::Spim;
 use hal::gpio::{p0, Pin, PushPull, PullUp, Input, Output, Floating, Level};
-use hal::saadc::{Saadc, SaadcConfig};
 use hal::pac::{SAADC, SPIM0, TWIM1};
+use hal::saadc::{Saadc, SaadcConfig};
+use hal::Spim;
 use hal::twim::Twim;
 use shared_bus_rtic::SharedBus;
 use st7789::ST7789;
@@ -15,13 +15,13 @@ use display_interface_spi::SPIInterface;
 use cst816s::CST816S;       // touchpad driver
 
 
+pub mod vibrator;
+use vibrator::Vibrator;
 pub mod battery_status;
 use battery_status::BatteryStatus;
 pub mod backlight;
 use backlight::Backlight;
-mod accelerometer;
-pub mod vibrator;
-use vibrator::Vibrator;
+pub mod accelerometer;
 
 pub const SCREEN_WIDTH: u32 = 240;
 pub const SCREEN_HEIGHT: u32 = 240;
@@ -50,9 +50,9 @@ pub struct SharedI2c {
 
 pub struct Pinetime {
     pub battery: BatteryStatus,
-    pub backlight: Backlight,
     pub crown: Pin<Input<Floating>>,
     pub vibrator: Vibrator,
+    pub backlight: Backlight,
     pub lcd: st7789::ST7789<
         SPIInterface<
             SharedBus<Spim<SPIM0>>,
@@ -70,10 +70,10 @@ pub struct Pinetime {
 
 impl Pinetime {
     pub fn init(
-                hw_timer0: pac::TIMER0,
                 hw_gpio: pac::P0,
                 hw_saddc: SAADC,
-                hw_spi: pac::SPIM0, // SPIM0 required by ST7789 (otherwise dma transfers don't trigger)
+                hw_spi: pac::SPIM0,    // note: SPIM1 locks waiting for interrupt under display driver
+                hw_timer0: pac::TIMER0,
                 hw_i2c: pac::TWIM1,
                 _hw_ble_radio: pac::RADIO,
                 _hw_ficr: pac::FICR,
@@ -81,28 +81,24 @@ impl Pinetime {
         // Set up GPIO
         let gpio = hal::gpio::p0::Parts::new(hw_gpio);
 
-        // Set up ADC
-        let saadc = Saadc::new(hw_saddc, SaadcConfig::default());
-
-        // enable crown
+        // enable crown (button)
         gpio.p0_15.into_push_pull_output(Level::High);
-        let crown = gpio.p0_13.into_floating_input().degrade();
 
-        // Set up SPI0
+        // Set up SPI
         let spi_pins = hal::spim::Pins {
             sck: gpio.p0_02.into_push_pull_output(Level::Low).degrade(),
             mosi: Some(gpio.p0_03.into_push_pull_output(Level::Low).degrade()),
             miso: Some(gpio.p0_04.into_floating_input().degrade()),
         };
-        let spi = hal::Spim::new(
+        let spim = hal::Spim::new(
             hw_spi,
             spi_pins,
             // 8MHz to maximize screen refresh
             hal::spim::Frequency::M8,
             hal::spim::MODE_3,
-            0,  // fill transmissions with tailing zeros (TODO: should this be 122?)
+            0,
         );
-        let spi_bus = shared_bus_rtic::new!(spi, Spim<SPIM0>);
+        let spi_bus = shared_bus_rtic::new!(spim, Spim<SPIM0>);
 
         // Set up LCD
         let lcd_cs = gpio.p0_25.into_push_pull_output(Level::High);
@@ -118,8 +114,8 @@ impl Pinetime {
             scl: gpio.p0_07.into_floating_input().degrade(),
             sda: gpio.p0_06.into_floating_input().degrade(),
         };
-        let i2c_port = hal::twim::Twim::new(hw_i2c, i2c_pins, hal::twim::Frequency::K400);
-        let i2c_bus = shared_bus_rtic::new!(i2c_port, Twim<TWIM1>);
+        let i2c_twim= hal::twim::Twim::new(hw_i2c, i2c_pins, hal::twim::Frequency::K400);
+        let i2c_bus = shared_bus_rtic::new!(i2c_twim, Twim<TWIM1>);
 
         // Set up Touchpad
         let touch_interrupt_pin = gpio.p0_28.into_pullup_input();
@@ -132,23 +128,22 @@ impl Pinetime {
         let mut heartrate = Hrs3300::new(i2c_bus.acquire());
         heartrate.init().unwrap();
 
-        // Set up Bluetooth TODO update rubble
+        // Set up Bluetooth TODO: implement
 
         Self {
             battery: BatteryStatus{
-                saadc,
+                saadc: Saadc::new(hw_saddc, SaadcConfig::default()),
                 pin_charge_indication: gpio.p0_12.into_floating_input().degrade(),
                 pin_voltage: gpio.p0_31.into_floating_input(),
             },
-            // backlight: Backlight::init(
+            crown: gpio.p0_13.into_floating_input().degrade(),
+            vibrator: Vibrator{
+                pin: gpio.p0_16.into_push_pull_output(Level::Low).degrade(),
+            },
             backlight: Backlight{
                 low: gpio.p0_14.into_push_pull_output(Level::Low).degrade(),
                 mid: gpio.p0_22.into_push_pull_output(Level::Low).degrade(),
                 high: gpio.p0_23.into_push_pull_output(Level::Low).degrade(),
-            },
-            crown,
-            vibrator: Vibrator{
-                pin: gpio.p0_16.into_push_pull_output(Level::Low).degrade(),
             },
             lcd,
             touchpad,

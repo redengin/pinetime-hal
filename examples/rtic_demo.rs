@@ -46,10 +46,10 @@ mod app {
         let mono = MonoTimer::new(cx.device.TIMER1);
 
         let mut pinetime = Pinetime::init(
-            cx.device.TIMER0,
             cx.device.P0,
             cx.device.SAADC,
             cx.device.SPIM0,
+            cx.device.TIMER0,
             cx.device.TWIM1,
             cx.device.RADIO,
             cx.device.FICR,
