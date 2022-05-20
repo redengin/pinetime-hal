@@ -1,4 +1,5 @@
-use nrf52832_hal::{gpio::{Pin, Output, PushPull}, prelude::OutputPin};
+use nrf52832_hal::gpio::{Pin, Output, PushPull};
+use nrf52832_hal::{prelude::OutputPin};
 
 pub struct Vibrator {
     pub(super) pin: Pin<Output<PushPull>>,
