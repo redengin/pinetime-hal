@@ -8,12 +8,12 @@ use panic_rtt_target as _;
 mod app {
     use pinetime_hal::Pinetime;
     use pinetime_hal::monotonic_nrf52::{MonoTimer};
-    use fugit::{self, ExtU32};
+    // use fugit::{self, ExtU32};
     use embedded_graphics::{
         prelude::*,
         pixelcolor::Rgb565,
-        mono_font::{MonoTextStyle, ascii::FONT_10X20},
-        text::Text,
+        mono_font::{MonoTextStyleBuilder, ascii::FONT_10X20},
+        text::{Text},
     };
     use heapless::String;
     use core::fmt::Write;
@@ -92,12 +92,14 @@ mod app {
             touchEvent = i2c.touchpad.read_one_touch_event(true);
         });
 
+        // create a non-transparent font
+        let text_style = MonoTextStyleBuilder::new()
+            .font(&FONT_10X20)
+            .text_color(Rgb565::WHITE)
+            .background_color(Rgb565::BLACK)
+            .build();
 
-        let text_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
         cx.shared.spi_peripherals.lock(|spi| {
-
-            // clear the display
-            spi.lcd.clear(Rgb565::BLACK).unwrap();
 
             // display a header
             Text::new("Pinetime", Point::new(0, 15), text_style)
@@ -133,6 +135,6 @@ mod app {
             };
         });
 
-        display_task::spawn_after(1.secs()).unwrap();
+        display_task::spawn().unwrap();
     }
 }
