@@ -4,16 +4,13 @@ Rust Pinetime Hardware Abstraction Layer (HAL)
 Hardware
 --------------------------------------------------------------------------------
 * nRF52832 SOC (`thumbv7em-none-eabihf`)
-* embedded-hal traits
-    * [Delay](src/delay.rs)
 * [Battery](src/battery.rs)
 * [Backlight](src/backlight.rs)
-* [Screen](https://crates.io/crates/st7789)
-    * [embedded-graphics](https://crates.io/crates/embedded-graphics)
+* [LCD](https://crates.io/crates/st7789)
 * [Touch Screen](https://crates.io/crates/cst816s)
 * [Heart Rate Sensor](https://crates.io/crates/hrs3300)
-* [Accelerometer](src/accelerometer.rs)
-* Vibration (TODO)
+* [Vibration](src/vibrator.rs)
+* Accelerometer (TODO)
 * Flash (TODO) (PM25LV512) (https://crates.io/crates/spi-memory)
 
 Demo on the Pinetime
