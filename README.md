@@ -11,7 +11,7 @@ Hardware
 * [Heart Rate Sensor](https://crates.io/crates/hrs3300)
 * [Vibration](src/vibrator.rs)
 * Accelerometer (TODO)
-* Flash (TODO) (PM25LV512) (https://crates.io/crates/spi-memory)
+* Flash (TODO) (PM25LV512)
 
 Demo on the Pinetime
 ================================================================================
