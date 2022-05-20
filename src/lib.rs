@@ -85,13 +85,8 @@ impl Pinetime {
         // Set up GPIO
         let gpio = hal::gpio::p0::Parts::new(hw_gpio);
 
-        // Set up battery status
+        // Set up ADC
         let saadc = Saadc::new(hw_saddc, SaadcConfig::default());
-        let battery = BatteryStatus::init(
-                saadc,
-                gpio.p0_12.into_floating_input().degrade(),
-                gpio.p0_31.into_floating_input(),
-        );
 
         // enable crown
         gpio.p0_15.into_push_pull_output(Level::High);
@@ -144,16 +139,21 @@ impl Pinetime {
         // Set up Bluetooth TODO update rubble
 
         Self {
-            battery,
-            backlight: Backlight::init(
-                gpio.p0_14.into_push_pull_output(Level::Low).degrade(),
-                gpio.p0_22.into_push_pull_output(Level::Low).degrade(),
-                gpio.p0_23.into_push_pull_output(Level::Low).degrade(),
-            ),
+            battery: BatteryStatus{
+                saadc,
+                pin_charge_indication: gpio.p0_12.into_floating_input().degrade(),
+                pin_voltage: gpio.p0_31.into_floating_input(),
+            },
+            // backlight: Backlight::init(
+            backlight: Backlight{
+                low: gpio.p0_14.into_push_pull_output(Level::Low).degrade(),
+                mid: gpio.p0_22.into_push_pull_output(Level::Low).degrade(),
+                high: gpio.p0_23.into_push_pull_output(Level::Low).degrade(),
+            },
             crown,
-            vibrator: Vibrator::new(
-                gpio.p0_16.into_push_pull_output(Level::Low).degrade(),
-            ),
+            vibrator: Vibrator{
+                pin: gpio.p0_16.into_push_pull_output(Level::Low).degrade(),
+            },
             lcd,
             touchpad,
             heartrate,

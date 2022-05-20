@@ -5,28 +5,13 @@ use rtt_target::rprintln;
 
 /// There are three active-low backlight pins, each connected to a FET that
 /// toggles backlight power through a resistor.
-/// Through combinations of these pins, 7 brightness levels (+ off) can be
-/// configured.
 pub struct Backlight {
-    low: Pin<Output<PushPull>>,
-    mid: Pin<Output<PushPull>>,
-    high: Pin<Output<PushPull>>,
+    pub(super) low: Pin<Output<PushPull>>,
+    pub(super) mid: Pin<Output<PushPull>>,
+    pub(super) high: Pin<Output<PushPull>>,
 }
 
 impl Backlight {
-    /// Initialize the backlight with the specified level (0–7).
-    pub(crate) fn init(
-        low: Pin<Output<PushPull>>,
-        mid: Pin<Output<PushPull>>,
-        high: Pin<Output<PushPull>>,
-    ) -> Self {
-        Self {
-            low,
-            mid,
-            high,
-        }
-    }
-
     /// Set the brightness level. Must be a value between 0 (off) and 7 (max
     /// brightness). Higher values are clamped to 7.
     pub fn set(&mut self, mut brightness: u8) {

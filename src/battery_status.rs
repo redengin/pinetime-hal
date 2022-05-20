@@ -5,65 +5,30 @@ use nrf52832_hal::saadc::{Saadc};
 
 pub struct BatteryStatus {
     /// Pin High = battery, Low = charging.
-    pin_charge_indication: Pin<Input<Floating>>,
-
-    /// Pin Voltage level
-    pin_voltage: p0::P0_31<Input<Floating>>,
+    pub(super) pin_charge_indication: Pin<Input<Floating>>,
 
     /// SAADC peripheral
-    saadc: Saadc,
+    pub(super) saadc: Saadc,
 
-    /// Charging state
-    pub charging: bool,
-
-    pub voltage: f32,
+    /// Pin Voltage level
+    pub(super) pin_voltage: p0::P0_31<Input<Floating>>,
 }
 
 impl BatteryStatus {
-    /// Initialize the battery status.
-    pub(super) fn init(
-        saadc: Saadc,
-        pin_charge_indication: Pin<Input<Floating>>,
-        pin_voltage: p0::P0_31<Input<Floating>>,
-    ) -> Self {
-        let mut myself = Self {
-            pin_charge_indication,
-            pin_voltage,
-            saadc,
-            charging: false,
-            voltage: 0 as f32,
-        };
-
-        // gather the current state
-        myself.update();
-        myself
+    pub fn is_charging(&self) -> Result<bool, ()> {
+        return match self.pin_charge_indication.is_low() {
+            Ok(val) => Ok(val),
+            Err(_) => Err(())
+        }
     }
 
-    /// This returns the stored value. To fetch current data, call `update()` first.
-    pub fn is_charging(&self) -> bool {
-        self.charging
-    }
-
-    /// This returns the stored value. To fetch current data, call `update()` first.
-    pub fn voltage(&self) -> f32 {
-        self.voltage
-    }
-
-    /// Update the current battery status by reading information from the hardware.
-    pub fn update(&mut self) {
-        // Check charging status
-        self.charging =  self.pin_charge_indication.is_low().unwrap();
-
-        // Check voltage
-        self.voltage = self.read_voltage();
-    }
-
-    /// Convert a raw ADC measurement into a battery voltage
-    fn read_voltage(&mut self) -> f32 {
-        let adc_read = self.saadc.read(&mut self.pin_voltage);
-        match adc_read {
-            Ok(val) => return (val as f32 * 2.0) / (4095.0 / 3.3),
-            Err(_) => return 0 as f32
+    pub fn millivolts(&mut self) -> Result<i32, ()> {
+        const ADC_SCALE: i32 = (4095.0 / 3.3) as i32;
+        const MV_PER_VOLT: i32 = 1000;
+        return match self.saadc.read(&mut self.pin_voltage) {
+            // value is multiplied by two per pinetime electrical design
+            Ok(val) => Ok((val as i32 * 2 * MV_PER_VOLT) / ADC_SCALE),
+            Err(_) => Err(())
         };
     }
 }
