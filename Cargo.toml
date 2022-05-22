@@ -19,8 +19,10 @@ cst816s = "0.1"
 # heartrate sensor
 hrs3300 = "0.1"
 # bluetooth driver
+# rubble = "0.0"
 # rubble-nrf5x = { version = "0.0", features = ["52832"] }
-
+rubble = { git="https://github.com/placrosse/rubble" }
+rubble-nrf5x = { git="https://github.com/placrosse/rubble", features=["52832"] }
 
 [dev-dependencies]
 cortex-m = "0.7"

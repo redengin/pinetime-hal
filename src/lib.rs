@@ -13,7 +13,22 @@ use st7789::ST7789;
 use hrs3300::Hrs3300;
 use display_interface_spi::SPIInterface;
 use cst816s::CST816S;       // touchpad driver
-
+use rubble::{
+    config::Config,
+    security::NoSecurity,
+    l2cap::{BleChannelMap},
+    link::{
+        ad_structure::AdStructure,
+        queue::{PacketQueue, SimpleQueue},
+        LinkLayer, MIN_PDU_BUF,
+    },
+    time::{Duration},
+};
+use rubble_nrf5x::{
+    radio::{BleRadio, PacketBuffer},
+    timer::BleTimer,
+};
+pub mod ble;
 
 pub mod vibrator;
 use vibrator::Vibrator;
@@ -48,6 +63,15 @@ pub struct SharedI2c {
     pub heartrate: Hrs3300<SharedBus<Twim<TWIM1>>>,
 }
 
+pub enum BleConfig {}
+
+impl Config for BleConfig {
+    type Timer = BleTimer<hal::pac::TIMER0>;
+    type Transmitter = BleRadio;
+    type ChannelMapper = BleChannelMap<ble::BleAttributes, NoSecurity>;
+    type PacketQueue = &'static mut SimpleQueue;
+}
+
 pub struct Pinetime {
     pub battery: BatteryStatus,
     pub crown: Pin<Input<Floating>>,
@@ -67,18 +91,21 @@ pub struct Pinetime {
     >,
     pub heartrate: Hrs3300<SharedBus<Twim<TWIM1>>>,
     pub temperature: nrf52832_hal::Temp,
+    pub ble_radio: Option<BleRadio>, 
+    pub ble_linklayer: Option<LinkLayer<BleConfig>>,
 }
 
 impl Pinetime {
     pub fn init(
                 hw_gpio: pac::P0,
                 hw_saddc: SAADC,
+                hw_temperature: pac::TEMP,
                 hw_spi: pac::SPIM0,    // note: SPIM1 locks waiting for interrupt under display driver
                 hw_timer0: pac::TIMER0,
                 hw_i2c: pac::TWIM1,
-                _hw_ble_radio: pac::RADIO,
-                _hw_ficr: pac::FICR,
-                hw_temperature: pac::TEMP,
+                hw_clock: pac::CLOCK,
+                hw_ble_radio: pac::RADIO,
+                hw_ficr: pac::FICR,
     ) -> Self {
         // Set up GPIO
         let gpio = hal::gpio::p0::Parts::new(hw_gpio);
@@ -134,7 +161,39 @@ impl Pinetime {
         // Set up temperature sensor
         let temperature = hal::Temp::new(hw_temperature);
 
-        // Set up Bluetooth TODO: implement
+        // Set up Bluetooth
+        // Switch to external HF oscillator for Bluetooth
+        hal::clocks::Clocks::new(hw_clock).enable_ext_hfosc();
+        let hw_timer0 = timer.free();   // take back the timer
+        let ble_timer = BleTimer::init(hw_timer0);
+        let ble_address = rubble_nrf5x::utils::get_device_address();
+        static mut BLE_TX_BUF:PacketBuffer = [0; MIN_PDU_BUF];
+        static mut BLE_RX_BUF:PacketBuffer = [0; MIN_PDU_BUF];
+        static mut BLE_TX_QUEUE:SimpleQueue = SimpleQueue::new();
+        static mut BLE_RX_QUEUE:SimpleQueue = SimpleQueue::new();
+        let ble_radio: Option<BleRadio> = None;
+        let ble_linklayer: Option<LinkLayer<BleConfig>> = None;
+        unsafe { // allow static buffer references to be taken (due to poor rubble architecture)
+            let mut ble_radio = BleRadio::new(
+                hw_ble_radio,
+                &hw_ficr,
+                &mut BLE_TX_BUF,
+                &mut BLE_RX_BUF,
+            );
+            let mut ble_linklayer = LinkLayer::<BleConfig>::new(ble_address, ble_timer);
+            // Send advertisement and set up regular interrupt
+            let (_, ble_tx_consumer) = BLE_TX_QUEUE.split();
+            let (ble_rx_producer, _) = BLE_RX_QUEUE.split();
+            ble_linklayer
+                .start_advertise(
+                    Duration::from_millis(200),
+                    &[AdStructure::CompleteLocalName("Pinetime")],
+                    &mut ble_radio,
+                    ble_tx_consumer,
+                    ble_rx_producer,
+                )
+                .unwrap();
+        }
 
         Self {
             battery: BatteryStatus{
@@ -155,8 +214,8 @@ impl Pinetime {
             touchpad,
             heartrate,
             temperature,
+            ble_radio,
+            ble_linklayer,
         }
     }
 }
-
-

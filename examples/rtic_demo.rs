@@ -18,6 +18,12 @@ mod app {
     use heapless::String;
     use core::fmt::Write;
     use rtt_target::{rprintln, rtt_init_print};
+    use rubble::{
+        link::{LinkLayer},
+    };
+    use rubble_nrf5x::{
+        radio::{BleRadio},
+    };
 
     #[monotonic(binds = TIMER1, default = true)]
     type Tonic = MonoTimer<nrf52832_hal::pac::TIMER1>;
@@ -37,6 +43,8 @@ mod app {
         // crown: Pin<Input<Floating>>,
         // vibrator: pinetime_hal::vibrator::Vibrator,
         temperature: nrf52832_hal::Temp,
+        ble_radio: Option<BleRadio>,
+        ble_linklayer: Option<LinkLayer<pinetime_hal::BleConfig>>,
     }
 
     #[init]
@@ -50,13 +58,20 @@ mod app {
         let mut pinetime = Pinetime::init(
             cx.device.P0,
             cx.device.SAADC,
+            cx.device.TEMP,
             cx.device.SPIM0,
             cx.device.TIMER0,
             cx.device.TWIM1,
+            cx.device.CLOCK,
             cx.device.RADIO,
             cx.device.FICR,
-            cx.device.TEMP,
         );
+        
+        // Setup Bluetooth
+        match pinetime.ble_linklayer {
+            Some(ref _linklayer) => {} //{ linklayer.timer().configure_interrupt(()); }
+            None => {}
+        }
 
         // clear the display
         pinetime.lcd.clear(Rgb565::BLACK).unwrap();
@@ -80,6 +95,8 @@ mod app {
             // backlight: pinetime.backlight,
             // vibrator: pinetime.vibrator,
             temperature: pinetime.temperature,
+            ble_radio: pinetime.ble_radio,
+            ble_linklayer: pinetime.ble_linklayer,
           },
           init::Monotonics(mono)
         )
@@ -92,6 +109,7 @@ mod app {
             cortex_m::asm::wfe();
         }
     }
+
 
     #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery, temperature])]
     fn display_task(mut cx: display_task::Context) {
