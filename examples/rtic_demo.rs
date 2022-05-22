@@ -36,6 +36,7 @@ mod app {
         // backlight: pinetime_hal::backlight::Backlight,
         // crown: Pin<Input<Floating>>,
         // vibrator: pinetime_hal::vibrator::Vibrator,
+        temperature: nrf52832_hal::Temp,
     }
 
     #[init]
@@ -54,6 +55,7 @@ mod app {
             cx.device.TWIM1,
             cx.device.RADIO,
             cx.device.FICR,
+            cx.device.TEMP,
         );
 
         // clear the display
@@ -77,6 +79,7 @@ mod app {
             battery: pinetime.battery,
             // backlight: pinetime.backlight,
             // vibrator: pinetime.vibrator,
+            temperature: pinetime.temperature,
           },
           init::Monotonics(mono)
         )
@@ -90,11 +93,12 @@ mod app {
         }
     }
 
-    #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery])]
+    #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery, temperature])]
     fn display_task(mut cx: display_task::Context) {
 
         let millivolts = cx.local.battery.millivolts();
         let charging = cx.local.battery.is_charging();
+        let temperature = cx.local.temperature.measure();
         let mut touchEvent = None;
         cx.shared.i2c_peripherals.lock(|i2c| {
             touchEvent = i2c.touchpad.read_one_touch_event(false);
@@ -130,6 +134,13 @@ mod app {
                 Err(_) => { write!(millivolts_text, "failed").unwrap() },
             };
             Text::new(millivolts_text.as_str(), Point::new(25, 60), text_style)
+                .draw(&mut spi.lcd)
+                .unwrap();
+
+            // display temperature
+            let mut temperature_text = String::<50>::from("temp (C) ");
+            write!(temperature_text, "{:3}", temperature).unwrap();
+            Text::new(temperature_text.as_str(), Point::new(25, 80), text_style)
                 .draw(&mut spi.lcd)
                 .unwrap();
 

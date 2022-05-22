@@ -66,6 +66,7 @@ pub struct Pinetime {
         p0::P0_10<Output<PushPull>>,        // reset pin
     >,
     pub heartrate: Hrs3300<SharedBus<Twim<TWIM1>>>,
+    pub temperature: nrf52832_hal::Temp,
 }
 
 impl Pinetime {
@@ -77,6 +78,7 @@ impl Pinetime {
                 hw_i2c: pac::TWIM1,
                 _hw_ble_radio: pac::RADIO,
                 _hw_ficr: pac::FICR,
+                hw_temperature: pac::TEMP,
     ) -> Self {
         // Set up GPIO
         let gpio = hal::gpio::p0::Parts::new(hw_gpio);
@@ -129,6 +131,9 @@ impl Pinetime {
         let mut heartrate = Hrs3300::new(i2c_bus.acquire());
         heartrate.init().unwrap();
 
+        // Set up temperature sensor
+        let temperature = hal::Temp::new(hw_temperature);
+
         // Set up Bluetooth TODO: implement
 
         Self {
@@ -149,6 +154,7 @@ impl Pinetime {
             lcd,
             touchpad,
             heartrate,
+            temperature,
         }
     }
 }

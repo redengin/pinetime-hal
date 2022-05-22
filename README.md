@@ -10,6 +10,7 @@ Hardware
 * [Touch Screen](https://crates.io/crates/cst816s)
 * [Heart Rate Sensor](https://crates.io/crates/hrs3300)
 * [Vibration](src/vibrator.rs)
+* [Temperature](src/temperature.rs)
 * Accelerometer (TODO)
 * Flash (TODO) (PM25LV512)
 
