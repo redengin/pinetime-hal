@@ -7,10 +7,10 @@ pub struct Vibrator {
 
 impl Vibrator {
     pub fn on(&mut self) {
-        self.pin.set_high().unwrap();
+        self.pin.set_low().unwrap();
     }
 
     pub fn off(&mut self) {
-        self.pin.set_low().unwrap();
+        self.pin.set_high().unwrap();
     }
 }

@@ -139,7 +139,7 @@ impl Pinetime {
             },
             crown: gpio.p0_13.into_floating_input().degrade(),
             vibrator: Vibrator{
-                pin: gpio.p0_16.into_push_pull_output(Level::Low).degrade(),
+                pin: gpio.p0_16.into_push_pull_output(Level::High).degrade(),
             },
             backlight: Backlight{
                 low: gpio.p0_14.into_push_pull_output(Level::Low).degrade(),

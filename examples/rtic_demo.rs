@@ -82,6 +82,14 @@ mod app {
         )
     }
 
+    #[idle]
+    fn idle(_cx: idle::Context) -> ! {
+        loop {
+            // go into deep sleep to conserve power
+            cortex_m::asm::wfe();
+        }
+    }
+
     #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery])]
     fn display_task(mut cx: display_task::Context) {
 
@@ -100,7 +108,6 @@ mod app {
             .build();
 
         cx.shared.spi_peripherals.lock(|spi| {
-
             // display a header
             Text::new("Pinetime", Point::new(0, 15), text_style)
                 .draw(&mut spi.lcd)
