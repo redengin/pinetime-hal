@@ -1,9 +1,9 @@
 Rust Pinetime Hardware Abstraction Layer (HAL)
 ================================================================================
 
-Hardware
+Hardware Support
 --------------------------------------------------------------------------------
-* nRF52832 SOC (`thumbv7em-none-eabihf`)
+* [nRF52832 SOC](https://crates.io/crates/nrf52832-hal)
 * [Battery](src/battery.rs)
 * [Backlight](src/backlight.rs)
 * [LCD](https://crates.io/crates/st7789)
@@ -12,6 +12,7 @@ Hardware
 * [Vibration](src/vibrator.rs)
 * [Temperature](src/temperature.rs)
 * Accelerometer (TODO)
+* Bluetooth (TODO)
 * Flash (TODO) (PM25LV512)
 
 Demo on the Pinetime
