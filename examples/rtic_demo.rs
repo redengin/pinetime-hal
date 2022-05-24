@@ -18,12 +18,12 @@ mod app {
     use heapless::String;
     use core::fmt::Write;
     use rtt_target::{rprintln, rtt_init_print};
-    // use rubble::{
-    //     link::{LinkLayer},
-    // };
-    // use rubble_nrf5x::{
-    //     radio::{BleRadio},
-    // };
+    use rubble::{
+        link::{LinkLayer},
+    };
+    use rubble_nrf5x::{
+        radio::{BleRadio},
+    };
 
     #[monotonic(binds = TIMER1, default = true)]
     type Tonic = MonoTimer<nrf52832_hal::pac::TIMER1>;
@@ -43,8 +43,8 @@ mod app {
         // crown: Pin<Input<Floating>>,
         // vibrator: pinetime_hal::vibrator::Vibrator,
         temperature: nrf52832_hal::Temp,
-        // ble_radio: Option<BleRadio>,
-        // ble_linklayer: Option<LinkLayer<pinetime_hal::BleConfig>>,
+        ble_radio: Option<BleRadio>,
+        ble_linklayer: Option<LinkLayer<pinetime_hal::BleConfig>>,
     }
 
     #[init]
@@ -68,10 +68,10 @@ mod app {
         );
         
         // Setup Bluetooth
-        // match pinetime.ble_linklayer {
-        //     Some(ref _linklayer) => {} //{ linklayer.timer().configure_interrupt(()); }
-        //     None => {}
-        // }
+        match pinetime.ble_linklayer {
+            Some(ref _linklayer) => {} //{ linklayer.timer().configure_interrupt(()); }
+            None => {}
+        }
 
         // clear the display
         pinetime.lcd.clear(Rgb565::BLACK).unwrap();
@@ -95,20 +95,20 @@ mod app {
             // backlight: pinetime.backlight,
             // vibrator: pinetime.vibrator,
             temperature: pinetime.temperature,
-            // ble_radio: pinetime.ble_radio,
-            // ble_linklayer: pinetime.ble_linklayer,
+            ble_radio: pinetime.ble_radio,
+            ble_linklayer: pinetime.ble_linklayer,
           },
           init::Monotonics(mono)
         )
     }
 
-    #[idle]
-    fn idle(_cx: idle::Context) -> ! {
-        loop {
-            // go into deep sleep to conserve power
-            cortex_m::asm::wfe();
-        }
-    }
+    // #[idle]
+    // fn idle(_cx: idle::Context) -> ! {
+    //     loop {
+    //         // go into deep sleep to conserve power
+    //         cortex_m::asm::wfe();
+    //     }
+    // }
 
 
     #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery, temperature])]
@@ -148,7 +148,7 @@ mod app {
             // display voltage status
             let mut millivolts_text = String::<50>::from("millivolts ");
             match millivolts {
-                Ok(value) => { write!(millivolts_text, "{:3}", value).unwrap() }, 
+                Ok(value) => { write!(millivolts_text, "{:03.3}", value).unwrap() }, 
                 Err(_) => { write!(millivolts_text, "failed").unwrap() },
             };
             Text::new(millivolts_text.as_str(), Point::new(25, 60), text_style)

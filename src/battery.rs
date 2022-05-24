@@ -22,6 +22,7 @@ impl Battery {
         }
     }
 
+    // TODO use fixed to return a U2F30 voltage
     pub fn millivolts(&mut self) -> Result<i32, ()> {
         const FUDGE:i32 = 2;    // not sure why but this makes the reading correct
         const ADC_SCALE:i32 = FUDGE * (4095.0 / 3.3) as i32;
