@@ -12,8 +12,15 @@ Hardware Support
 * [Vibration](src/vibrator.rs)
 * [Temperature](src/temperature.rs)
 * Accelerometer (TODO)
-* Bluetooth (TODO)
-* Flash (TODO) (PM25LV512)
+
+### For BlueTooth (BLE) and Flash support choose an Operating System(OS)
+As there are already robust implementations of these functionalities from an OS,
+there is no reason to re-implement these functionalities more for bare-metal.
+
+OS choices https://wiki.pine64.org/wiki/PineTime_Development  
+**TockOs is implemented in Rust** https://www.tockos.org/documentation/walkthrough/
+
+
 
 Demo on the Pinetime
 ================================================================================
@@ -31,6 +38,7 @@ Using OpenOcd
 cargo run --release --example rtic_demo
 ```
 **Tapping on the screen** marks the touch with an **X**.
+
 
 Setting up JTAG
 ================================================================================
