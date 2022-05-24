@@ -102,14 +102,13 @@ mod app {
         )
     }
 
-    // #[idle]
-    // fn idle(_cx: idle::Context) -> ! {
-    //     loop {
-    //         // go into deep sleep to conserve power
-    //         cortex_m::asm::wfe();
-    //     }
-    // }
-
+    #[idle]
+    fn idle(_cx: idle::Context) -> ! {
+        loop {
+            // go into deep sleep to conserve power
+            cortex_m::asm::wfe();
+        }
+    }
 
     #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery, temperature])]
     fn display_task(mut cx: display_task::Context) {
@@ -136,9 +135,9 @@ mod app {
                 .unwrap();
 
             // display charging status
-            let mut charging_text = String::<50>::from("charging ");
+            let mut charging_text = String::<50>::new();
             match charging {
-                Ok(value) => { write!(charging_text, "{:3}", value).unwrap() },
+                Ok(value) => { write!(charging_text, "charging {:3}", value).unwrap() },
                 Err(_) => { write!(charging_text, "failed").unwrap() },
             };
             Text::new(charging_text.as_str(), Point::new(25, 40), text_style)
@@ -146,9 +145,9 @@ mod app {
                 .unwrap();
 
             // display voltage status
-            let mut millivolts_text = String::<50>::from("millivolts ");
+            let mut millivolts_text = String::<50>::new();
             match millivolts {
-                Ok(value) => { write!(millivolts_text, "{:03.3}", value).unwrap() }, 
+                Ok(value) => { write!(millivolts_text, "battery {:03.3} mV", value).unwrap() }, 
                 Err(_) => { write!(millivolts_text, "failed").unwrap() },
             };
             Text::new(millivolts_text.as_str(), Point::new(25, 60), text_style)
@@ -156,9 +155,8 @@ mod app {
                 .unwrap();
 
             // display temperature
-            let mut temperature_text = String::<50>::from("temperature ");
-            write!(temperature_text, "{:03.2}", temperature).unwrap();
-            write!(temperature_text, " C").unwrap();
+            let mut temperature_text = String::<50>::new();
+            write!(temperature_text, "temperature {:03.2} C", temperature).unwrap();
             Text::new(temperature_text.as_str(), Point::new(25, 80), text_style)
                 .draw(&mut spi.lcd)
                 .unwrap();
