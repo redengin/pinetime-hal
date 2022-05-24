@@ -18,12 +18,12 @@ mod app {
     use heapless::String;
     use core::fmt::Write;
     use rtt_target::{rprintln, rtt_init_print};
-    use rubble::{
-        link::{LinkLayer},
-    };
-    use rubble_nrf5x::{
-        radio::{BleRadio},
-    };
+    // use rubble::{
+    //     link::{LinkLayer},
+    // };
+    // use rubble_nrf5x::{
+    //     radio::{BleRadio},
+    // };
 
     #[monotonic(binds = TIMER1, default = true)]
     type Tonic = MonoTimer<nrf52832_hal::pac::TIMER1>;
@@ -38,13 +38,13 @@ mod app {
 
     #[local]
     struct Local {
-        battery: pinetime_hal::battery_status::BatteryStatus,
+        battery: pinetime_hal::battery::Battery,
         // backlight: pinetime_hal::backlight::Backlight,
         // crown: Pin<Input<Floating>>,
         // vibrator: pinetime_hal::vibrator::Vibrator,
         temperature: nrf52832_hal::Temp,
-        ble_radio: Option<BleRadio>,
-        ble_linklayer: Option<LinkLayer<pinetime_hal::BleConfig>>,
+        // ble_radio: Option<BleRadio>,
+        // ble_linklayer: Option<LinkLayer<pinetime_hal::BleConfig>>,
     }
 
     #[init]
@@ -68,10 +68,10 @@ mod app {
         );
         
         // Setup Bluetooth
-        match pinetime.ble_linklayer {
-            Some(ref _linklayer) => {} //{ linklayer.timer().configure_interrupt(()); }
-            None => {}
-        }
+        // match pinetime.ble_linklayer {
+        //     Some(ref _linklayer) => {} //{ linklayer.timer().configure_interrupt(()); }
+        //     None => {}
+        // }
 
         // clear the display
         pinetime.lcd.clear(Rgb565::BLACK).unwrap();
@@ -95,8 +95,8 @@ mod app {
             // backlight: pinetime.backlight,
             // vibrator: pinetime.vibrator,
             temperature: pinetime.temperature,
-            ble_radio: pinetime.ble_radio,
-            ble_linklayer: pinetime.ble_linklayer,
+            // ble_radio: pinetime.ble_radio,
+            // ble_linklayer: pinetime.ble_linklayer,
           },
           init::Monotonics(mono)
         )
@@ -156,8 +156,9 @@ mod app {
                 .unwrap();
 
             // display temperature
-            let mut temperature_text = String::<50>::from("temp (C) ");
-            write!(temperature_text, "{:3}", temperature).unwrap();
+            let mut temperature_text = String::<50>::from("temperature ");
+            write!(temperature_text, "{:03.2}", temperature).unwrap();
+            write!(temperature_text, " C").unwrap();
             Text::new(temperature_text.as_str(), Point::new(25, 80), text_style)
                 .draw(&mut spi.lcd)
                 .unwrap();
