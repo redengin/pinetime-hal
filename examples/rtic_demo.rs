@@ -7,7 +7,6 @@ use panic_rtt_target as _;
 #[rtic::app(device = nrf52832_hal::pac, peripherals = true, dispatchers = [SWI0_EGU0])]
 mod app {
     use pinetime_hal::Pinetime;
-    use pinetime_hal::monotonic_nrf52::{MonoTimer};
     // use fugit::{self, ExtU32};
     use embedded_graphics::{
         prelude::*,
@@ -18,9 +17,6 @@ mod app {
     use heapless::String;
     use core::fmt::Write;
     use rtt_target::{rprintln, rtt_init_print};
-
-    #[monotonic(binds = TIMER1, default = true)]
-    type Tonic = MonoTimer<nrf52832_hal::pac::TIMER1>;
 
     #[shared]
     struct Shared {
@@ -43,9 +39,6 @@ mod app {
     fn init(cx: init::Context) -> (Shared, Local, init::Monotonics) {
         rtt_init_print!();
         rprintln!("init");
-
-        // initialize scheduler timer
-        let mono = MonoTimer::new(cx.device.TIMER1);
 
         let mut pinetime = Pinetime::init(
             cx.device.P0,
@@ -84,7 +77,7 @@ mod app {
             // vibrator: pinetime.vibrator,
             temperature: pinetime.temperature,
           },
-          init::Monotonics(mono)
+          init::Monotonics()
         )
     }
 
