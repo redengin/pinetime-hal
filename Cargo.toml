@@ -34,7 +34,11 @@ rtt-target = { version = "0.3", features = ["cortex-m"]}
 embedded-graphics = "0.7"
 heapless = { version = "0.7", default-features = false }
 
+[profile.dev]
+opt-level = "s"
+
 [profile.release]
 codegen-units = 1 # better optimizations
+opt-level = "s"
 debug = true # symbols are nice and they don't increase the size on Flash
 lto = true # better optimizations
