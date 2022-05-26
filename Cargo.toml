@@ -1,8 +1,13 @@
 [package]
-authors = ["redengin <sholstei@yahoo.com>"]
-edition = "2018"
-readme = "README.md"
 name = "pinetime-hal"
+description = "100% rust support for pinetime"
+authors = ["redengin <sholstei@yahoo.com>"]
+repository = "https://github.com/redengin/pinetime-hal"
+categories = ["embedded", "no-std"]
+keywords = ["pinetime"]
+readme = "README.md"
+license = "LICENSE"
+edition = "2018"
 version = "0.0.1"
 
 [dependencies]
