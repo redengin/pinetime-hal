@@ -64,7 +64,7 @@ mod app {
         // clear the display
         pinetime.lcd.clear(Rgb565::BLACK).unwrap();
         // set the backlight
-        pinetime.backlight.set(1);
+        pinetime.backlight.set(7);
 
         // spawn initial tasks
         display_task::spawn().unwrap();
@@ -107,10 +107,15 @@ mod app {
             touchEvent = i2c.touchpad.read_one_touch_event(false);
         });
 
-        // create a non-transparent font
+        // create non-transparent font(s)
         let text_style = MonoTextStyleBuilder::new()
             .font(&FONT_10X20)
-            .text_color(Rgb565::WHITE)
+            .text_color(Rgb565::new(0x0f, 0x0f, 0x1f))
+            .background_color(Rgb565::BLACK)
+            .build();
+        let mark_style = MonoTextStyleBuilder::new()
+            .font(&FONT_10X20)
+            .text_color(Rgb565::YELLOW)
             .background_color(Rgb565::BLACK)
             .build();
 
@@ -151,9 +156,12 @@ mod app {
 
             // display touch point
             match touchEvent {
-                Some(touchEvent) => { Text::new("X", Point::new(touchEvent.x, touchEvent.y), text_style)
-                                                    .draw(&mut spi.lcd).unwrap();
-                                    },
+                Some(touchEvent) => {
+                    Text::new("X",
+                     Point::new(touchEvent.x, touchEvent.y),
+                     mark_style)
+                    .draw(&mut spi.lcd).unwrap();
+                },
                 None => {},
             };
         });
