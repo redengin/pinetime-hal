@@ -2,6 +2,7 @@ use embedded_hal::adc::OneShot;
 use embedded_hal::digital::v2::InputPin;
 use nrf52832_hal::gpio::{p0, Pin, Input, Floating};
 use nrf52832_hal::saadc::{Saadc};
+use fixed::types::U4F12;
 
 pub struct Battery {
     /// Pin High = battery, Low = charging.
@@ -22,13 +23,9 @@ impl Battery {
         }
     }
 
-    // TODO use fixed to return a U2F30 voltage
-    pub fn millivolts(&mut self) -> Result<i32, ()> {
-        const FUDGE:i32 = 2;    // not sure why but this makes the reading correct
-        const ADC_SCALE:i32 = FUDGE * (4095.0 / 3.3) as i32;
-        const MV_PER_VOLT:i32 = 1000;
+    pub fn voltage(&mut self) -> Result<U4F12, ()> {
         return match self.saadc.read(&mut self.pin_voltage) {
-            Ok(val) => Ok((val as i32 * MV_PER_VOLT) / ADC_SCALE),
+            Ok(val) => Ok((U4F12::from_bits(val as u16 + 1) / 2 / 10) * 33),
             Err(_) => Err(())
         };
     }

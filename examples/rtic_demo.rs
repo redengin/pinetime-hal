@@ -99,7 +99,7 @@ mod app {
     #[task(shared=[spi_peripherals, i2c_peripherals], local=[battery, temperature])]
     fn display_task(mut cx: display_task::Context) {
 
-        let millivolts = cx.local.battery.millivolts();
+        let voltage = cx.local.battery.voltage();
         let charging = cx.local.battery.is_charging();
         let temperature = cx.local.temperature.measure();
         let mut touchEvent = None;
@@ -131,12 +131,14 @@ mod app {
                 .unwrap();
 
             // display voltage status
-            let mut millivolts_text = String::<50>::new();
-            match millivolts {
-                Ok(value) => { write!(millivolts_text, "battery {:03.3} mV", value).unwrap() }, 
-                Err(_) => { write!(millivolts_text, "failed").unwrap() },
+            let mut voltage_text = String::<50>::new();
+            match voltage {
+                Ok(value) => {
+                     write!(voltage_text, "battery {:03.3} V", value).unwrap()
+                }, 
+                Err(_) => { write!(voltage_text, "battery failed").unwrap() },
             };
-            Text::new(millivolts_text.as_str(), Point::new(25, 60), text_style)
+            Text::new(voltage_text.as_str(), Point::new(25, 60), text_style)
                 .draw(&mut spi.lcd)
                 .unwrap();
 
