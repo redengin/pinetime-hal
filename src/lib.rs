@@ -23,28 +23,6 @@ pub mod accelerometer;
 pub const SCREEN_WIDTH: u32 = 240;
 pub const SCREEN_HEIGHT: u32 = 240;
 
-// under RTIC, shared busses need to be locked https://github.com/ryan-summers/shared-bus-rtic
-pub struct SharedSpi {
-    pub lcd: st7789::ST7789<
-        SPIInterface<
-            SharedBus<hal::Spim<pac::SPIM0>>,
-            p0::P0_18<Output<PushPull>>,    // data/command pin
-            p0::P0_25<Output<PushPull>>,    // chip select
-        >,
-        p0::P0_26<Output<PushPull>>,        // reset pin
-    >,
-    // TODO add flash
-}
-
-// under RTIC, shared busses need to be locked https://github.com/ryan-summers/shared-bus-rtic
-pub struct SharedI2c {
-    pub touchpad: CST816S<SharedBus<Twim<TWIM1>>,
-        p0::P0_28<Input<PullUp>>,           // interrupt pin
-        p0::P0_10<Output<PushPull>>,        // reset pin
-    >,
-    pub heartrate: Hrs3300<SharedBus<Twim<TWIM1>>>,
-}
-
 pub struct Pinetime {
     pub battery: Battery,
     pub crown: Pin<Input<Floating>>,
@@ -67,8 +45,7 @@ pub struct Pinetime {
 }
 
 impl Pinetime {
-    pub fn init(
-                hw_gpio: pac::P0,
+    pub fn init(hw_gpio: pac::P0,
                 hw_saddc: SAADC,
                 hw_temperature: pac::TEMP,
                 hw_spi: pac::SPIM0,    // note: SPIM1 locks waiting for interrupt under display driver
@@ -155,4 +132,26 @@ impl Pinetime {
             temperature,
         }
     }
+}
+
+// under RTIC, shared busses need to be locked https://github.com/ryan-summers/shared-bus-rtic
+pub struct SharedSpi {
+    pub lcd: st7789::ST7789<
+        SPIInterface<
+            SharedBus<hal::Spim<pac::SPIM0>>,
+            p0::P0_18<Output<PushPull>>,    // data/command pin
+            p0::P0_25<Output<PushPull>>,    // chip select
+        >,
+        p0::P0_26<Output<PushPull>>,        // reset pin
+    >,
+    // TODO add flash
+}
+
+// under RTIC, shared busses need to be locked https://github.com/ryan-summers/shared-bus-rtic
+pub struct SharedI2c {
+    pub touchpad: CST816S<SharedBus<Twim<TWIM1>>,
+        p0::P0_28<Input<PullUp>>,           // interrupt pin
+        p0::P0_10<Output<PushPull>>,        // reset pin
+    >,
+    pub heartrate: Hrs3300<SharedBus<Twim<TWIM1>>>,
 }
