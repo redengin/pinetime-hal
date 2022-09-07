@@ -1,6 +1,4 @@
 #![no_std]
-// monotonic timer for rtic scheduling
-pub mod monotonic_nrf52;
 
 use nrf52832_hal::{self as hal, pac};
 use hal::gpio::{p0, Pin, PushPull, PullUp, Input, Output, Floating, Level};

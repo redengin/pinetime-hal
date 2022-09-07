@@ -12,14 +12,15 @@ Hardware Support
 * [Vibration](src/vibrator.rs)
 * [Temperature](src/temperature.rs)
 * Accelerometer (TODO)
-
-### For BlueTooth (BLE) and Flash support choose an Operating System(OS)
-As there are already robust implementations of these functionalities from an OS,
-there is no reason to re-implement these functionalities more for bare-metal.
-
-OS choices https://wiki.pine64.org/wiki/PineTime_Development  
-**TockOs is implemented in Rust** https://www.tockos.org/documentation/walkthrough/
-
+* Bluetooth (BLE)
+    * Use [embedded OS that supports PineTime](https://wiki.pine64.org/wiki/PineTime_Development).
+        * NOTE: you will need to understand how to integrate these Rust implementations into the
+            chosen environment.
+    * **work** on the development of a [Rust BLE implementation](https://github.com/redengin/embedded-ble)
+* Filesystem - use of remaining flash (not used for static application) storage 
+    * Use [embedded OS that supports PineTime](https://wiki.pine64.org/wiki/PineTime_Development).
+        * NOTE: you will need to understand how to integrate these Rust implementations into the
+            chosen environment.
 
 
 Demo on the Pinetime
@@ -40,7 +41,7 @@ cargo run --release --example rtic_demo
 **Tapping on the screen** marks the touch with an **X**.
 
 
-Setting up JTAG
+Setting up access to Pinetime
 ================================================================================
 The **preferred method** is to use [probe-rs](https://probe.rs/docs/getting-started/probe-setup/).
 --------------------------------------------------------------------------------
@@ -53,9 +54,10 @@ cargo install cargo-flash
 # install the advanced embedded debug utilities
 cargo install cargo-embed
 ```
-Note, you may have to update your STLink firmware:
+### Note, you may have to update your STLink firmware:
 https://www.st.com/resource/en/data_brief/stsw-link007.pdf
 
+<!--
 ### [Integrating Probe-rs with VSCode](https://probe.rs/docs/tools/vscode/)
 ```sh
 # update url to latest available
@@ -67,51 +69,8 @@ code --install-extension probe-rs-debugger.vsix
 cargo install --git https://github.com/probe-rs/probe-rs probe-rs-debugger
 ```
 **TODO** the `.vscode/launch.json` is not currently working.
+-->
 
-
-**Alternatively**, you can use OpenOCD
+Using OpenOcd
 --------------------------------------------------------------------------------
-If your distro's version of OpenOCD isn't working, build it yourself.
-```sh
-git clone https://github.com/ntfreak/openocd --depth=1
-cd openocd
-# add hidapi for CMSSIS-DAP
-git clone https://github.com/Dashlane/hidapi.git --depth=1
-cd hidapi
-./bootstrap && ./configure
-make -j
-# return to OpenOCD directory
-cd ..
-./bootstrap
-# NOTE: where you see `linux` you can change to `mac`
-HIDAPI_LIBS="-Lhidapi/linux/.libs -lhidapi-hidraw -lpthread" \
-PKG_CONFIG_PATH=hidapi/pc/ \
-CPPFLAGS="-Ihidapi/hidapi" \
-    ./configure --enable-cmsis-dap
-make -j
-```
-To start your own OpenOCD
-```sh
-# NOTE: use this from the project directory which provides an openocd.cfg
-./openocd/src/openocd --search openocd/tcl/
-```
-
-### Testing out your OpenOcd
-```sh
-./openocd/src/openocd --search openocd/tcl/
-# should result in
-# ...
-# Info : [nrf52.cpu] Cortex-M4 r0p1 processor detected
-# Info : [nrf52.cpu] target has 6 breakpoints, 4 watchpoints
-# ...
-```
-in another terminal (leaving the openocd process running)
-```sh
-gdb-multiarch -q target/thumbv7em-none-eabihf/debug/examples/rtic_demo
-# within gdb
-    target extended-remote :3333
-    load
-    continue
-# you shouldn't see any errors in your `openocd` terminal
-# the demo should run on the pinetime
-```
+If your OS provided version of OpenOcd doesn't work, use [custom_ocd](docs/custom_openocd.md).
