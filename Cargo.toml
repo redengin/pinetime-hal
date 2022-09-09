@@ -24,6 +24,8 @@ cst816s = "0.1"
 # heartrate sensor
 hrs3300 = "0.1"
 fixed = "1.0"
+# accelerometer
+accelerometer = { version = "0.12", default-features = false }
 
 [dev-dependencies]
 cortex-m = "0.7"
