@@ -18,8 +18,6 @@ pub mod battery;
 use battery::Battery;
 pub mod backlight;
 use backlight::Backlight;
-pub mod accelerometer;
-use crate::accelerometer::BMA4xx;
 
 pub const SCREEN_WIDTH: u32 = 240;
 pub const SCREEN_HEIGHT: u32 = 240;
@@ -40,9 +38,6 @@ pub struct Pinetime {
     pub touchpad: CST816S<SharedBus<Twim<TWIM1>>,
         p0::P0_28<Input<PullUp>>,           // interrupt pin
         p0::P0_10<Output<PushPull>>,        // reset pin
-    >,
-    pub accelerometer: BMA4xx<SharedBus<Twim<TWIM1>>,
-        p0::P0_08<Input<PullUp>>,           // interrupt pin
     >,
     pub heartrate: Hrs3300<SharedBus<Twim<TWIM1>>>,
     pub temperature: nrf52832_hal::Temp,
@@ -104,12 +99,12 @@ impl Pinetime {
         let mut touchpad = CST816S::new(i2c_bus.acquire(), touch_interrupt_pin, touch_rst);
         touchpad.setup(&mut timer).unwrap();
 
-        // Set up accelerometer TODO: implement
-        let accelerometer_interrupt_pin1 = Some(gpio.p0_08.into_pullup_input());
-        let accelerometer = accelerometer::BMA4xx::new(
-            i2c_bus.acquire(),
-            accelerometer_interrupt_pin1,
-            None);
+        // Set up accelerometer
+        // let accelerometer_interrupt_pin1 = Some(gpio.p0_08.into_pullup_input());
+        // let accelerometer = accelerometer::BMA4xx::new(
+        //     i2c_bus.acquire(),
+        //     accelerometer_interrupt_pin1,
+        //     None);
 
         // Set up heartrate sensor
         let mut heartrate = Hrs3300::new(i2c_bus.acquire());
@@ -137,7 +132,6 @@ impl Pinetime {
             },
             lcd,
             touchpad,
-            accelerometer,
             heartrate,
             temperature,
         }
