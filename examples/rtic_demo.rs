@@ -52,8 +52,6 @@ mod app {
             cx.device.FICR,
         );
         
-        // Setup Bluetooth TODO: implement
-
         // clear the display
         pinetime.lcd.clear(Rgb565::BLACK).unwrap();
         // set the backlight

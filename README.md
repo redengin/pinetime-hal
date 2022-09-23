@@ -17,7 +17,7 @@ Hardware Support
         * NOTE: you will need to understand how to integrate these Rust implementations into the
             chosen environment.
     * **work** on the development of a [Rust BLE implementation](https://github.com/redengin/embedded-ble)
-* Filesystem - use of remaining flash (not used for static application) storage 
+* Filesystem - use of remaining flash (not used for static application) for storage 
     * Use [embedded OS that supports PineTime](https://wiki.pine64.org/wiki/PineTime_Development).
         * NOTE: you will need to understand how to integrate these Rust implementations into the
             chosen environment.

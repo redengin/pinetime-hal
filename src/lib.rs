@@ -59,6 +59,13 @@ impl Pinetime {
 
         // enable crown (button)
         gpio.p0_15.into_push_pull_output(Level::High);
+        let crown = gpio.p0_13.into_floating_input().degrade();
+
+        // enable battery monitor
+        let saadc = Saadc::new(hw_saddc, SaadcConfig::default());
+        let pin_charge_indication = gpio.p0_12.into_floating_input().degrade();
+        let pin_voltage = gpio.p0_31.into_floating_input();
+        let battery = Battery::new(pin_charge_indication, saadc, pin_voltage);
 
         // Set up SPI
         let spi_pins = hal::spim::Pins {
@@ -116,12 +123,8 @@ impl Pinetime {
         // Set up Bluetooth TODO: implement
 
         Self {
-            battery: Battery{
-                saadc: Saadc::new(hw_saddc, SaadcConfig::default()),
-                pin_charge_indication: gpio.p0_12.into_floating_input().degrade(),
-                pin_voltage: gpio.p0_31.into_floating_input(),
-            },
-            crown: gpio.p0_13.into_floating_input().degrade(),
+            battery,
+            crown,
             vibrator: Vibrator{
                 pin: gpio.p0_16.into_push_pull_output(Level::High).degrade(),
             },

@@ -6,16 +6,26 @@ use fixed::types::U4F12;
 
 pub struct Battery {
     /// Pin High = battery, Low = charging.
-    pub(super) pin_charge_indication: Pin<Input<Floating>>,
+    pin_charge_indication: Pin<Input<Floating>>,
 
     /// SAADC peripheral
-    pub(super) saadc: Saadc,
+    saadc: Saadc,
 
     /// Pin Voltage level
-    pub(super) pin_voltage: p0::P0_31<Input<Floating>>,
+    pin_voltage: p0::P0_31<Input<Floating>>,
 }
 
 impl Battery {
+    pub fn new(pin_charge_indication: Pin<Input<Floating>>,
+               saadc: Saadc,
+               pin_voltage: p0::P0_31<Input<Floating>>) -> Self {
+        Self {
+            pin_charge_indication,
+            saadc,
+            pin_voltage
+        }
+    }
+
     pub fn is_charging(&self) -> Result<bool, ()> {
         return match self.pin_charge_indication.is_low() {
             Ok(val) => Ok(val),
